@@ -3,18 +3,18 @@
     global	Keys_Translator, Keypad, tmpval
     extern	delay
     
-acs0    udata_acs   ; named variables in access ram
+acs0    udata_acs			; named variables in access ram
 tmpval	res 1
 	  
 Keys	code
 	
-Keys_Translator 
-	movlb	5		    ;use Bank 5
-	lfsr	FSR1, 0x580	    ;start at 0x580 address in Bank 5
-	movlw	'1'		    ;ascii characters into files in Bank 5
+Keys_Translator		;sets the values of the keys of our keypad
+	movlb	5			;use Bank 5
+	lfsr	FSR1, 0x580		;start at 0x580 address in Bank 5
+	movlw	'1'			;store ascii characters in files in Bank 5
 	movwf	tmpval
 	movlw	0x77
-	movff	tmpval,PLUSW1
+	movff	tmpval,PLUSW1		;N.B. PLUSWn does not change FSRn
 	movlw	'2'
 	movwf	tmpval
 	movlw	0xB7
@@ -47,8 +47,8 @@ Keys_Translator
 	movwf	tmpval
 	movlw	0xDD
 	movff	tmpval,PLUSW1
-	movlw	'T'
-	movwf	tmpval
+	movlw	'T'		    
+	movwf	tmpval		    
 	movlw	0xE7
 	movff	tmpval,PLUSW1
 	movlw	'E'
@@ -73,11 +73,11 @@ Keys_Translator
 	movff	tmpval,PLUSW1
 	movlw	'#'
 	movwf	tmpval
-	movlw	0xDE
-	movff	tmpval,PLUSW1
+	movlw	0xDE			;keypad can now write 'TEMP' and 'TIME'
+	movff	tmpval,PLUSW1		;as well as numbers 0-9
 	return
 
-Keypad	
+Keypad			;moves appropriate ascii character to W
 	banksel	PADCFG1			
 	bsf	PADCFG1, REPU, BANKED	;pull up resistors on Port E
 	movlb	0x0 
@@ -90,7 +90,7 @@ Keypad
 	call	delay
 	movf	PORTE, W, ACCESS
 	cpfsgt	tmpval, ACCESS
-	bra	Keypad
+	bra	Keypad			;if nothing is pressed, loop back to start
 	movwf	0x02, ACCESS
 	movlw	0xf0			;collecting high nibble
 	movwf	TRISE
