@@ -48,102 +48,102 @@ adc_loop
     return
 
 M_16x16				;multiplies a 16-bit by a 16-bit 
-    call	    M_16Setup		;and stores output as 3 bytes (rb, rh, ru)
-    movff	    numcL, numa
-    call	    M_CalculateL
-    movff	    numcH, numa
-    call	    M_CalculateH
-    call	    M_addHL16
+    call    M_16Setup		;and stores output as 3 bytes (rb, rh, ru)
+    movff   numcL, numa
+    call    M_CalculateL
+    movff   numcH, numa
+    call    M_CalculateH
+    call    M_addHL16
     return
   
 M_8x24				;multiplies an 8-bit by a 24-bit
-    call	    M_24Setup		;and stores output as 4 bytes (rb, rh, ru, rt)
-    call	    M_CalculateL
-    call	    M_CalculateU
-    call	    M_addHL24
+    call    M_24Setup		;and stores output as 4 bytes (rb, rh, ru, rt)
+    call    M_CalculateL
+    call    M_CalculateU
+    call    M_addHL24
     return
   
 M_16Setup
-    call	    M_Table
-    clrf	    tmpnumLL
-    clrf	    tmpnumLH
-    clrf	    tmpnumLU
-    clrf	    tmpnumHL
-    clrf	    tmpnumHH
-    clrf	    tmpnumHU	
-    movlw	    0x8A		;k value stored as 2 bytes
-    movwf	    numcL
-    movlw	    0x41
-    movwf	    numcH
+    call    M_Table
+    clrf    tmpnumLL
+    clrf    tmpnumLH
+    clrf    tmpnumLU
+    clrf    tmpnumHL
+    clrf    tmpnumHH
+    clrf    tmpnumHU	
+    movlw   0x8A		;k value stored as 2 bytes
+    movwf   numcL
+    movlw   0x41
+    movwf   numcH
     return
   
 M_24Setup
-    call	    M_Table
-    clrf	    tmpnumLL
-    clrf	    tmpnumLH
-    clrf	    tmpnumLU
-    clrf	    tmpnumHL
-    clrf	    tmpnumHH
-    clrf	    tmpnumHU	
-    movlw	    0x0A
-    movwf	    numa
+    call    M_Table
+    clrf    tmpnumLL
+    clrf    tmpnumLH
+    clrf    tmpnumLU
+    clrf    tmpnumHL
+    clrf    tmpnumHH
+    clrf    tmpnumHU	
+    movlw   0x0A
+    movwf   numa
     return
   
 M_CalculateL
-    movf	    numa, W
-    mulwf	    numbL
-    movff	    PRODL, tmpnumLL
-    movff	    PRODH, purse
-    mulwf	    numbH
-    movf	    purse, W
-    addwf	    PRODL, W
-    movwf	    tmpnumLH
-    movf      PRODH, W
-    addwfc    tmpnumLU, f
+    movf    numa, W
+    mulwf   numbL
+    movff   PRODL, tmpnumLL
+    movff   PRODH, purse
+    mulwf   numbH
+    movf    purse, W
+    addwf   PRODL, W
+    movwf   tmpnumLH
+    movf    PRODH, W
+    addwfc  tmpnumLU, f
     return
   
 M_CalculateH
-    movf	    numa, W
-    mulwf	    numbL
-    movff	    PRODL, tmpnumHL
-    movff	    PRODH, purse
-    mulwf	    numbH
-    movf	    purse, W
-    addwf	    PRODL, W
-    movwf	    tmpnumHH
-    movf      PRODH, W
-    addwfc    tmpnumHU, f
+    movf    numa, W
+    mulwf   numbL
+    movff   PRODL, tmpnumHL
+    movff   PRODH, purse
+    mulwf   numbH
+    movf    purse, W
+    addwf   PRODL, W
+    movwf   tmpnumHH
+    movf    PRODH, W
+    addwfc  tmpnumHU, f
     return
   
 M_CalculateU
-    movf	    numa, W
-    mulwf	    numbU
-    movff	    PRODL, tmpnumUL
-    movff	    PRODH, tmpnumUH
+    movf    numa, W
+    mulwf   numbU
+    movff   PRODL, tmpnumUL
+    movff   PRODH, tmpnumUH
     return
  
 M_addHL16			;addition to give final 16x16 bit calculation
-    movff	    tmpnumLL, rb
-    movf	    tmpnumLH, w
-    addwf	    tmpnumHL, w
-    movwf	    rl
-    movf	    tmpnumLU,w
-    addwfc    tmpnumHH, f
-    movff	    tmpnumHH, rh
-    movlw	    0x0
-    addwfc    tmpnumHU, f
-    movff	    tmpnumHU, ru
+    movff   tmpnumLL, rb
+    movf    tmpnumLH, w
+    addwf   tmpnumHL, w
+    movwf   rl
+    movf    tmpnumLU,w
+    addwfc  tmpnumHH, f
+    movff   tmpnumHH, rh
+    movlw   0x0
+    addwfc  tmpnumHU, f
+    movff   tmpnumHU, ru
     return
   
 M_addHL24			;addition to give final 8x24 bit calculation
-    movff	    tmpnumLL, rb
-    movff	    tmpnumLH, rl
-    movf	    tmpnumLU, W
-    addwf	    tmpnumUL, f
-    movff	    tmpnumUL, rh
-    movlw	    0x0
-    addwfc    tmpnumUH, f
-    movff	    tmpnumUH, ru
+    movff   tmpnumLL, rb
+    movff   tmpnumLH, rl
+    movf    tmpnumLU, W
+    addwf   tmpnumUL, f
+    movff   tmpnumUL, rh
+    movlw   0x0
+    addwfc  tmpnumUH, f
+    movff   tmpnumUH, ru
     return
 
 M_Table			    ;lookup table (basically)
