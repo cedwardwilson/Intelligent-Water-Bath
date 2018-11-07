@@ -1,11 +1,14 @@
 #include p18f87k22.inc
     
-    global	Keys_Translator, Keypad, tmpval
-    extern	delay
+    global	Keys_Translator, Keypad, tmpval, T_in_d_h, hundreds, tens, units
+    extern	delay, LCD_delay_ms
     
 acs0    udata_acs			; named variables in access ram
 tmpval	res 1
-	  
+units	res 1				;for our t_in_d_h
+tens	res 1
+hundreds    res 1			
+	
 Keys	code
 	
 Keys_Translator		;sets the values of the keys of our keypad
@@ -100,10 +103,101 @@ Keypad			;moves appropriate ascii character to W
 	movf	PORTE, W, ACCESS
 	addwf	0x02
 	movf	0x02, W, ACCESS		;storing full binary number in W
-	clrf	TRISH
 	movff	PLUSW1, tmpval		;turning W into an address,
 	call	delay			;where ascii character will be stored
-	movf	tmpval, W					
+	movf	tmpval, W
+	return  
+	
+T_in_d_h	    ;temperature input (from keypad) to hex
+	call	LookUp_d_h
+	banksel	PADCFG1			
+	bsf	PADCFG1, REPU, BANKED	;pull up resistors on Port E
+	movlb	0x0 
+	clrf	LATE
+	movlw	0x0f			;collecting low nibble 
+	movwf	TRISE
+	movwf	tmpval
+	call	delay
+	movwf	PORTE
+	call	delay
+	movf	PORTE, W, ACCESS
+	cpfsgt	tmpval, ACCESS
+	bra	T_in_d_h		;if nothing is pressed, loop back to start
+	movwf	0x02, ACCESS
+	movlw	0xf0			;collecting high nibble
+	movwf	TRISE
+	call	delay
+	movwf	PORTE
+	call	delay
+	movf	PORTE, W, ACCESS
+	addwf	0x02
+	movf	0x02, W, ACCESS		;storing full binary number in W
+	movff	PLUSW0, tmpval		;turning W into an address,
+	call	delay			;where ascii character will be stored
+	movf	tmpval, W
+	btfsc	hundreds, 0
+	;call	delay
+	bra	tenscheck
+	movwf	hundreds
+	;call	delay
+	bra	T_in_d_h
+tenscheck 
+	btfsc   tens, 0
+	;call	delay
+	bra	set_units
+	movwf   tens
+	movf	tens, W
+	clrf	TRISD
+	movwf	PORTD
+	;call	delay
+	bra	T_in_d_h
+set_units   
+	movwf	units
 	return
 	
-	end
+LookUp_d_h		;sets the values of the keys of our keypad
+	movlb	6			;use Bank 5
+	lfsr	FSR0, 0x680		;start at 0x580 address in Bank 5
+	movlw	0x01			;store ascii characters in files in Bank 5
+	movwf	tmpval
+	movlw	0x77
+	movff	tmpval,PLUSW0		;N.B. PLUSWn does not change FSRn
+	movlw	0x02
+	movwf	tmpval
+	movlw	0xB7
+	movff	tmpval,PLUSW0
+	movlw	0x03
+	movwf	tmpval
+	movlw	0xD7
+	movff	tmpval,PLUSW0
+	movlw	0x04
+	movwf	tmpval
+	movlw	0x7B
+	movff	tmpval,PLUSW0
+	movlw	0x05
+	movwf	tmpval
+	movlw	0xBB 
+	movff	tmpval,PLUSW0
+	movlw	0x06
+	movwf	tmpval
+	movlw	0xDB
+	movff	tmpval,PLUSW0
+	movlw	0x07
+	movwf	tmpval
+	movlw	0x7D
+	movff	tmpval,PLUSW0
+	movlw	0x08
+	movwf	tmpval
+	movlw	0xBD
+	movff	tmpval,PLUSW0
+	movlw	0x09
+	movwf	tmpval
+	movlw	0xDD
+	movff	tmpval,PLUSW0
+	movlw	0x0
+	movwf	tmpval
+	movlw	0xBE
+	movff	tmpval, PLUSW0
+	return
+	
+end
