@@ -4,7 +4,7 @@
     extern	delay, LCD_Write_Hex, tmpval
 
 acs0    udata_acs 
-
+;below we resevre all the variables yhat are relevant to ADC calculations
 numa		res 1
 numbH		res 1
 numbL		res 1
@@ -20,9 +20,9 @@ tmpnumHU	res 1
 tmpnumUL	res 1
 tmpnumUH	res 1
 tmpnumUU	res 1
-rb		res 1
-rl		res 1
-rh		res 1
+rb		res 1	   
+rl		res 1	    
+rh		res 1	    
 ru		res 1
 rt		res 1
 purse		res 1
@@ -63,9 +63,9 @@ M_8x24				;multiplies an 8-bit by a 24-bit
     call    M_addHL24
     return
   
-M_16Setup
+M_16Setup			;must run before a 16-bit by 16-bit multiply
     call    M_Table
-    clrf    tmpnumLL
+    clrf    tmpnumLL		;ensure the temporary memeory locations clear
     clrf    tmpnumLH
     clrf    tmpnumLU
     clrf    tmpnumHL
@@ -77,7 +77,7 @@ M_16Setup
     movwf   numcH
     return
   
-M_24Setup
+M_24Setup			;must run before 1n 8-bit by 24-bit multiply
     call    M_Table
     clrf    tmpnumLL
     clrf    tmpnumLH
@@ -191,14 +191,14 @@ M_Table			    ;lookup table (basically)
     movff   tmpval,PLUSW2
     return
 
-M_SelectHigh	    		    ;grabs top byte of latest multiplied number
-    movf    ru, W, ACCESS
-    movff   PLUSW2, purse		
+M_SelectHigh	    		   ;grabs top byte of result of latest multiply
+    movf    ru, W, ACCESS	   ;ru is upper byte of the result  
+    movff   PLUSW2, purse	   ;puts value at fsr2+w into purse  	
     call    delay			
     movf    purse, W
     return
 
-M_Move				    ;moves latest result into correst bytes 
+M_Move				    ;moves latest result into correct bytes 
     movff   rb, numbL		    ;so it can be used again in following calc
     movff   rl, numbH
     movff   rh, numbU
