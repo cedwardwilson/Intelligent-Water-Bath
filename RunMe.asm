@@ -4,7 +4,7 @@
 	extern  ADC_Setup, ADC_Read		    ; external ADC routines
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
 	extern	FDLP, T_in_d_h, hundreds, tens, units
-	extern	LCD_Alg
+	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table
 	global	delay, T_CrntL, T_CrntH, measure_loop, offset
 	
 acs0	    udata_acs		    ; reserve data space in access ram
@@ -27,6 +27,10 @@ setup	bcf	EECON1, CFGS	    ; point to Flash program memory
 	;call	UART_Setup	    ; setup UART
 	call	LCD_Setup	    ; setup LCD
 	call	ADC_Setup	    ; setup ADC
+				; sets up our 3 look up tables
+	call	Keys_Translator	    ; using FSR1
+	call	LookUp_d_h	    ; using FSR0
+	call	M_Table		    ; using FSR2
 	goto	start
 	
 	; ******* Main programme ****************************************
