@@ -69,4 +69,4 @@ M_Table			    ;lookup table (basically)
     movff   tmpval,PLUSW2
     return
 
-end
+    end
