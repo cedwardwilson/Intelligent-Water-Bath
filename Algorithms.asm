@@ -1,6 +1,6 @@
 #include p18f87k22.inc
     
-	global	LCD_Alg, tempL, tempH
+	global	LCD_Alg, tempL, tempH, TempIn_Alg
 	extern	offset, numbL, T_CrntH, T_CrntL, numbH
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset
@@ -63,9 +63,9 @@ TempIn_Alg		;converts input temperature to a comparable hex voltage
 	movf	PRODH, W
 	addwfc	tempH, f	    ;this is the high byte of our mV reading 
 	movf	offset, W
-	subwf	tempL		    ;removes the offset
+	addwf	tempL		    ;removes the offset
 	movlw	0x0
-	subwfb	tempH
+	addwfc	tempH
 	return 
 	
 	end
