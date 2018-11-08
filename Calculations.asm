@@ -1,7 +1,7 @@
 #include p18f87k22.inc
     
     global	M_16x16, M_8x24, numbH, numbL, numbU, M_SelectHigh, M_Move
-    extern	delay, LCD_delay_ms
+    extern	delay, LCD_delay_ms, M_Table
     
 acs0    udata_acs 
 ;below we resevre all the variables yhat are relevant to ADC calculations
