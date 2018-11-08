@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global	ADC_Setup, ADC_Read
+    global	ADC_Setup, ADC_Read, M_Table
     extern	delay, LCD_Write_Hex, tmpval
 
 		
