@@ -33,9 +33,10 @@ setup	bcf	EECON1, CFGS	    ; point to Flash program memory
 start 	movlw	0x0D
 	movwf	offset
 	clrf	PORTJ, ACCESS	    ;cleared for use later with powering heater
-	clrf	hundreds
-	clrf	tens
-	clrf	units
+	movlw	0x0A
+	movwf	hundreds
+	movwf	tens
+	movwf	units
 	call	T_in_d_h
 	bra	measure_loop
 	
