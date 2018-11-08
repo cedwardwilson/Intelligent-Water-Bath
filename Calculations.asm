@@ -4,7 +4,7 @@
     extern	delay, LCD_delay_ms, M_Table
     
 acs0    udata_acs 
-;below we resevre all the variables yhat are relevant to ADC calculations
+;below we resevre all the variables that are relevant to calculations
 numa		res 1
 numbH		res 1
 numbL		res 1
@@ -71,7 +71,8 @@ M_24Setup			;must run before 1n 8-bit by 24-bit multiply
     movwf   numa
     return
   
-M_CalculateL
+M_CalculateL		  ;calculating low byte of result from multiplication
+			  ;involving adding with carries
     movf    numa, W
     mulwf   numbL
     movff   PRODL, tmpnumLL
@@ -84,8 +85,9 @@ M_CalculateL
     addwfc  tmpnumLU, f
     return
   
-M_CalculateH
-    movf    numa, W
+M_CalculateH		   ;calculating high byte of result from multiplication
+			   ;involving adding with carries
+    movf    numa, W	   
     mulwf   numbL
     movff   PRODL, tmpnumHL
     movff   PRODH, purse
@@ -97,7 +99,8 @@ M_CalculateH
     addwfc  tmpnumHU, f
     return
   
-M_CalculateU
+M_CalculateU		   ;calculating upper byte of result from multiplication
+			   ;involving adding with carries
     movf    numa, W
     mulwf   numbU
     movff   PRODL, tmpnumUL
@@ -141,9 +144,6 @@ M_Move				    ;moves latest result into correct bytes
     movff   rh, numbU
     return
     
-    
-;need to add 3 8-bit multiplications and adding the results for temp conversion
-    ;from keypad
     end
 
 
