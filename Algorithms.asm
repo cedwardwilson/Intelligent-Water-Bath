@@ -1,6 +1,6 @@
 #include p18f87k22.inc
     
-	global	LCD_Alg
+	global	LCD_Alg, tempL, tempH
 	extern	offset, numbL, T_CrntH, T_CrntL, numbH
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset
@@ -9,7 +9,7 @@ acs0	    udata_acs		    ; reserve data space in access ram
 tempL	    res 1		    ; reserve 3 bytes for tempory values
 tempH	    res 1	
 tempU	    res 1
-	    
+temp	    res 1
 Algorithms  code
   
 LCD_Alg				    ;follows procedure as outlined in lec9
@@ -68,3 +68,4 @@ TempIn_Alg		;converts input temperature to a comparable hex voltage
 	subwfb	tempH
 	return 
 	
+	end
