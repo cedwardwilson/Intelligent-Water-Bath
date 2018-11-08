@@ -5,6 +5,8 @@
     
 acs0    udata_acs			; named variables in access ram
 tmpval	res 1
+b_add_LCD	res 1			;for binary addresses for LCD
+b_add_d_h	res 1			;for binary addresses for d-h convert.
 units	res 1				;for our t_in_d_h
 tens	res 1
 hundreds    res 1			
@@ -94,15 +96,15 @@ Keypad			;moves appropriate ascii character to W
 	movf	PORTE, W, ACCESS
 	cpfsgt	tmpval, ACCESS
 	bra	Keypad			;if nothing is pressed, loop back to start
-	movwf	0x02, ACCESS
+	movwf	b_add_LCD, ACCESS
 	movlw	0xf0			;collecting high nibble
 	movwf	TRISE
 	call	delay
 	movwf	PORTE
 	call	delay
 	movf	PORTE, W, ACCESS
-	addwf	0x02
-	movf	0x02, W, ACCESS		;storing full binary number in W
+	addwf	b_add_LCD
+	movf	b_add_LCD, W, ACCESS		;storing full binary number in W
 	movff	PLUSW1, tmpval		;turning W into an address,
 	call	delay			;where ascii character will be stored
 	movf	tmpval, W
@@ -123,42 +125,50 @@ T_in_d_h	    ;temperature input (from keypad) to hex
 	movf	PORTE, W, ACCESS
 	cpfsgt	tmpval, ACCESS
 	bra	T_in_d_h		;if nothing is pressed, loop back to start
-	movwf	0x02, ACCESS
+	movwf	b_add_d_h, ACCESS
 	movlw	0xf0			;collecting high nibble
 	movwf	TRISE
 	call	delay
 	movwf	PORTE
 	call	delay
 	movf	PORTE, W, ACCESS
-	addwf	0x02
-	movf	0x02, W, ACCESS		;storing full binary number in W
+	addwf	b_add_d_h
+	movf	b_add_d_h, W, ACCESS		;storing full binary number in W
 	movff	PLUSW0, tmpval		;turning W into an address,
 	call	delay			;where ascii character will be stored
-	movf	tmpval, W
-	btfsc	hundreds, 0
+	;movf	tmpval, W
+	movlw	0x0A
+	cpfseq	hundreds
 	;call	delay
 	bra	tenscheck
-	movwf	hundreds
-	;call	delay
+	movff	tmpval, hundreds
+	movlw	.255
+	call	LCD_delay_ms
+	call	LCD_delay_ms
 	bra	T_in_d_h
 tenscheck 
-	btfsc   tens, 0
+	movlw	0x0A
+	cpfseq	tens
 	;call	delay
 	bra	set_units
-	movwf   tens
-	movf	tens, W
-	clrf	TRISD
-	movwf	PORTD
+	movff   tmpval, tens
+	call	LCD_delay_ms
+	call	LCD_delay_ms
+	;movf	tens, W
+	;clrf	TRISD
+	;movwf	PORTD
 	;call	delay
 	bra	T_in_d_h
 set_units   
-	movwf	units
+	movff	tmpval, units
+	call	LCD_delay_ms
+	call	LCD_delay_ms
 	return
 	
 LookUp_d_h		;sets the values of the keys of our keypad
-	movlb	6			;use Bank 5
-	lfsr	FSR0, 0x680		;start at 0x580 address in Bank 5
-	movlw	0x01			;store ascii characters in files in Bank 5
+	movlb	5			;use Bank 6
+	lfsr	FSR0, 0x580		;start at 0x680 address in Bank 6
+	movlw	0x01			;store ascii characters in files in Bank 6
 	movwf	tmpval
 	movlw	0x77
 	movff	tmpval,PLUSW0		;N.B. PLUSWn does not change FSRn
