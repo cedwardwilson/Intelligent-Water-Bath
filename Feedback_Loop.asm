@@ -9,9 +9,9 @@ T_desH	res 1
 Feedback_Loop	code
 	
 FDLP	
-	movlw	0x00		    ;manual input desired T
+	movlw	0x0C		    ;manual input desired T
 	movwf	T_desL
-	movlw	0x00
+	movlw	0x01
 	movwf	T_desH	    
 	movf	T_desH, W
 	cpfsgt	T_CrntH		    ;compare high bytes (current/desired)?
@@ -51,4 +51,4 @@ HeaterOn
 	movwf	PORTJ
 	bra	ReadOut
 
-end
+	end
