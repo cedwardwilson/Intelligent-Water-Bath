@@ -9,7 +9,7 @@ T_desH	res 1
 Feedback_Loop	code
 	
 FDLP	
-	movff	tempL, T_desL
+	movff	tempL, T_desL	    ;use the keypad in temp for comparison
 	;movlw	0xF0		    ;manual input desired T
 	;movwf	T_desL
 	movff	tempH, T_desH
