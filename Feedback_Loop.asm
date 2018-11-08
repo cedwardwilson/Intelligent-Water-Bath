@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 	
-	extern	    T_CrntH, T_CrntL, measure_loop
+	extern	    T_CrntH, T_CrntL, measure_loop, tempL, tempH
 	global	    FDLP
 acs0    udata_acs		    ; named variables in access ram
 T_desL	res 1		;2 bytes for input desired temp
@@ -9,10 +9,12 @@ T_desH	res 1
 Feedback_Loop	code
 	
 FDLP	
-	movlw	0x0C		    ;manual input desired T
-	movwf	T_desL
-	movlw	0x01
-	movwf	T_desH	    
+	movff	tempL, T_desL
+	;movlw	0xF0		    ;manual input desired T
+	;movwf	T_desL
+	movff	tempH, T_desH
+	;movlw	0x00
+	;movwf	T_desH	    
 	movf	T_desH, W
 	cpfsgt	T_CrntH		    ;compare high bytes (current/desired)?
 	bra	Heql_cmp
