@@ -1,7 +1,7 @@
 #include p18f87k22.inc
     
     global	Keypad, tmpval, T_in_d_h, hundreds, tens, units, tmpval
-    extern	delay, LCD_delay_ms, Keys_Translator, LookUp_d_h
+    extern	delay, LCD_delay_ms
     extern	LCD_Send_Byte_D, TempIn_Alg
     
 acs0    udata_acs			; named variables in access ram
@@ -46,7 +46,6 @@ Keypad			;moves appropriate ascii character to W
 	return  
 	
 T_in_d_h	    ;temperature input (from keypad) to hex
-	;call	LookUp_d_h
 	banksel	PADCFG1			
 	bsf	PADCFG1, REPU, BANKED	;pull up resistors on Port E
 	movlb	0x0 
