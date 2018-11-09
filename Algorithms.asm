@@ -73,33 +73,4 @@ TempIn_Alg		;converts input temperature to a comparable hex voltage
 	addwfc	tempH
 	return 
 	
-UART_Alg			    ;follows procedure as outlined in lec9
-	movf	ADRESL, W	    ;Takes a hex numbert from LM35
-	movwf	temp
-	movwf	T_CrntL
-	movf	offset, W	    ; offset is the voltage LM35 reads at 0K
-	subwf	temp, f		    ;subtract the offset voltage from LM35 value
-	movf	temp, W		    ;move this new voltage into temp
-	movwf	numbL
-	movf	ADRESH, W
-	movwf	temp
-	movwf	T_CrntH
-	movlw	0x0
-	subwfb	temp,f
-	movf	temp, W
-	movwf	numbH
-	call	M_16x16
-	call	M_SelectHigh
-	call	M_Move
-	call	M_8x24
-	call	M_SelectHigh
-	call	M_Move
-	call	M_8x24
-	call	M_SelectHigh
-	call	M_Move
-	movlw	'.'			; Forcing a decimal place into the UART
-	call	M_8x24
-	call	M_SelectHigh
-	return
-	
 	end
