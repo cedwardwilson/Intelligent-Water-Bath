@@ -5,7 +5,8 @@
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
 	extern	FDLP, T_in_d_h, hundreds, tens, units
 	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table
-	global	delay, T_CrntL, T_CrntH, measure_loop, offset
+	extern	SecondTimer, UART_Transmit_Byte, UART_Setup
+	global	delay, T_CrntL, T_CrntH, measure_loop, offset, TimerCount, DataCount
 	
 acs0	    udata_acs		    ; reserve data space in access ram
 counter	    res 1		    ; reserve one byte for a counter variable
@@ -13,6 +14,8 @@ delay_count res 1		    ; reserve one byte for counter in the delay routine
 offset	    res 1		    ; reserve one byte for the offset in the V-T conversion
 T_CrntL	    res 1
 T_CrntH	    res 1		    ;reserved for the current voltage readout off the LM35
+TimerCount  res 1		    ;number of seconds passed
+DataCount   res 1		    ;number of seconds between data readouts
 
 tables	    udata	0x400		    ; reserve data anywhere in RAM (here at 0x400)
 myArray	    res 0x80		    ; reserve 128 bytes for message data
@@ -24,13 +27,15 @@ main	code
 	; ******* Programme FLASH read Setup Code ***********************
 setup	bcf	EECON1, CFGS	    ; point to Flash program memory  
 	bsf	EECON1, EEPGD	    ; access Flash program memory
-	;call	UART_Setup	    ; setup UART
+	call	UART_Setup	    ; setup UART
 	call	LCD_Setup	    ; setup LCD
 	call	ADC_Setup	    ; setup ADC
 				; sets up our 3 look up tables
 	call	Keys_Translator	    ; using FSR1
 	call	LookUp_d_h	    ; using FSR0
 	call	M_Table		    ; using FSR2
+	movlw	0x0a
+	movwf	DataCount
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -42,6 +47,7 @@ start 	movlw	0x0D
 	movwf	tens
 	movwf	units
 	call	T_in_d_h
+	call	SecondTimer
 	bra	measure_loop
 	
 measure_loop
