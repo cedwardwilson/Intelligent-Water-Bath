@@ -1,7 +1,7 @@
 #include p18f87k22.inc
 	
 	extern	    T_CrntH, T_CrntL, measure_loop, tempL, tempH
-	global	    FDLP
+	global	    FDLP, ReadOut
 acs0    udata_acs		    ; named variables in access ram
 T_desL	res 1		;2 bytes for input desired temp
 T_desH	res 1
