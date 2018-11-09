@@ -3,7 +3,8 @@
 	global	LCD_Alg, tempL, tempH, TempIn_Alg
 	extern	offset, numbL, T_CrntH, T_CrntL, numbH
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
-	extern	hundreds, tens, units, offset
+	extern	hundreds, tens, units, offset, UART_Transmit_Byte
+	extern	DataLow, DataHigh, DataUp, DataTop
 	
 acs0	    udata_acs		    ; reserve data space in access ram	
 tempL	    res 1		    ; reserve 3 bytes for tempory values
@@ -29,20 +30,24 @@ LCD_Alg				    ;follows procedure as outlined in lec9
 	movwf	numbH
 	call	M_16x16
 	call	M_SelectHigh
+	movwf	DataTop
 	call	LCD_Send_Byte_D
 	call	M_Move
 	call	M_8x24
 	call	M_SelectHigh
+	movwf	DataUp
 	call	LCD_Send_Byte_D
 	call	M_Move
 	call	M_8x24
 	call	M_SelectHigh
+	movwf	DataHigh
 	call	LCD_Send_Byte_D
 	call	M_Move
 	movlw	'.'			; Forcing a decimal place into the LCD
 	call	LCD_Send_Byte_D
 	call	M_8x24
 	call	M_SelectHigh
+	movwf	DataLow
 	call	LCD_Send_Byte_D
 	return
 
@@ -67,5 +72,34 @@ TempIn_Alg		;converts input temperature to a comparable hex voltage
 	movlw	0x0
 	addwfc	tempH
 	return 
+	
+UART_Alg			    ;follows procedure as outlined in lec9
+	movf	ADRESL, W	    ;Takes a hex numbert from LM35
+	movwf	temp
+	movwf	T_CrntL
+	movf	offset, W	    ; offset is the voltage LM35 reads at 0K
+	subwf	temp, f		    ;subtract the offset voltage from LM35 value
+	movf	temp, W		    ;move this new voltage into temp
+	movwf	numbL
+	movf	ADRESH, W
+	movwf	temp
+	movwf	T_CrntH
+	movlw	0x0
+	subwfb	temp,f
+	movf	temp, W
+	movwf	numbH
+	call	M_16x16
+	call	M_SelectHigh
+	call	M_Move
+	call	M_8x24
+	call	M_SelectHigh
+	call	M_Move
+	call	M_8x24
+	call	M_SelectHigh
+	call	M_Move
+	movlw	'.'			; Forcing a decimal place into the UART
+	call	M_8x24
+	call	M_SelectHigh
+	return
 	
 	end
