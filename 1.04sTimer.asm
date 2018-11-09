@@ -18,24 +18,24 @@ int_hi	code	    0x0008		; high vector, no low vector
 	movf	    TimerCount, W
 	cpfseq	    DataCount
 	bra	    ContInt		; if des. time has not elapsed, continue
-	movf	    DataTop, W
+	movf	    DataTop, W		; sends the current temp to UART
 	call	    UART_Transmit_Byte
 	movf	    DataUp, W
 	call	    UART_Transmit_Byte
 	movf	    DataHigh, W
 	call	    UART_Transmit_Byte
-	movlw	    '.'
+	movlw	    '.'			; manual input of decimal point
 	call	    UART_Transmit_Byte
 	movf	    DataLow, W
 	call	    UART_Transmit_Byte
-	movlw	    ','
+	movlw	    ','			; comma will help when plotting in py.
 	call	    UART_Transmit_Byte
-	clrf	    TimerCount
+	clrf	    TimerCount		; start timer again
 ContInt	bcf	    INTCON,TMR0IF	; clear interrupt flag
 	retfie	    FAST		; fast return from interrupt
 	
-UART_Transmit_Byte
-	btfss   PIR1,TX1IF	    ; TX1IF is set when TXREG1 is empty
+UART_Transmit_Byte			; sends a byte to UART (from W)
+	btfss   PIR1,TX1IF		; TX1IF is set when TXREG1 is empty
 	bra	UART_Transmit_Byte
 	movwf   TXREG1
 	return
