@@ -39,7 +39,7 @@ Keypad			;moves appropriate ascii character to W
 	call	delay
 	movf	PORTE, W, ACCESS
 	addwf	b_add_LCD
-	movf	b_add_LCD, W, ACCESS		;storing full binary number in W
+	movf	b_add_LCD, W, ACCESS	;storing full binary number in W
 	movff	PLUSW1, tmpval		;turning W into an address,
 	call	delay			;where ascii character will be stored
 	movf	tmpval, W
