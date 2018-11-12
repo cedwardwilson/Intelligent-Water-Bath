@@ -44,19 +44,19 @@ Keys_Translator		;sets the values of the keys of our keypad
 	movwf	tmpval
 	movlw	0xDD
 	movff	tmpval,PLUSW1
-	movlw	'T'		    
+	movlw	'A'		    
 	movwf	tmpval		    
 	movlw	0xE7
 	movff	tmpval,PLUSW1
-	movlw	'E'
+	movlw	'B'
 	movwf	tmpval
 	movlw	0xEB
 	movff	tmpval,PLUSW1
-	movlw	'M'
+	movlw	'C'
 	movwf	tmpval
 	movlw	0xED
 	movff	tmpval,PLUSW1
-	movlw	'P'
+	movlw	'D'
 	movwf	tmpval
 	movlw	0xEE
 	movff	tmpval,PLUSW1
@@ -64,7 +64,7 @@ Keys_Translator		;sets the values of the keys of our keypad
 	movwf	tmpval
 	movlw	0xBE
 	movff	tmpval, PLUSW1
-	movlw	'I'
+	movlw	'*'
 	movwf	tmpval
 	movlw	0x7E
 	movff	tmpval,PLUSW1
