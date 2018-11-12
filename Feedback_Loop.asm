@@ -1,14 +1,14 @@
 #include p18f87k22.inc
 	
-	extern	    T_CrntH, T_CrntL, measure_loop, tempL, tempH
-	global	    FDLP, ReadOut
+	extern	    T_CrntH, T_CrntL, tempL, tempH, TimeDesL, TimeDesH, TimeL, TimeH
+	global	    FDLP_Temp, FDLP_Time
 acs0    udata_acs		    ; named variables in access ram
 T_desL	res 1		;2 bytes for input desired temp
 T_desH	res 1
 
 Feedback_Loop	code
 	
-FDLP	
+FDLP_Temp				    ; Temperature Feedback Loop
 	movff	tempL, T_desL	    ;use the keypad in temp for comparison
 	;movlw	0xF0		    ;manual input desired T
 	;movwf	T_desL
@@ -35,22 +35,38 @@ Equal_comp	    ;are the low bytes equal (current/desired)?
 	bra	HeaterOn
 	bra	HeaterOff
 
-ReadOut	    ;this will be filled later, for efficiency/timing estimations
-	nop
-	return
+FDLP_Time	    
+	movf	TimeDesH, W
+	cpfsgt	TimeH		    ;compare high bytes (current/desired)?
+	bra	TimeStep1
+	bra	HeaterOff
 	
+TimeStep1	    ;are the high bytes equal (current/desired)?
+	cpfseq	TimeH
+	bra	HeaterOn 
+	
+TimeStep2	    ;compare low bytes (current/desired)?
+	movf	TimeDesL, W
+	cpfsgt	TimeL
+	bra	TimeStep3
+	bra	HeaterOff
+	
+TimeStep3	    ;are the low bytes equal (current/desired)?
+	cpfseq	TimeL
+	bra	HeaterOn
+	bra	HeaterOff
 ; **Heater On/Off routines - either powering or disabling the BD135 transistor**
 	;pin 1 on PORTJ controls the heater - low = heater off, high = heater on
 HeaterOff
 	clrf	TRISJ
 	movlw	0x00
 	movwf	PORTJ
-	bra	ReadOut
+	return
 	
 HeaterOn
 	clrf	TRISJ
 	movlw	0x01
 	movwf	PORTJ
-	bra	ReadOut
+	return 
 
 	end
