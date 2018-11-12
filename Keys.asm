@@ -104,7 +104,7 @@ set_units
 	call	LCD_Send_Byte_D
 	call	LCD_delay_ms
 	call	LCD_delay_ms
-	call	TempIn_Alg
+	;call	TempIn_Alg
 	return
 	
 	end
