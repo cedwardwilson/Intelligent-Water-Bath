@@ -42,7 +42,7 @@ UART_Transmit_Byte			; sends a byte to UART (from W)
 	
 main	code
 SecondTimer	clrf	TimerCount
-		movlw	b'10000110'	; Set timer0 to 16-bit, Fosc/4/256
+		movlw	b'10000111'	; Set timer0 to 16-bit, Fosc/4/256
 		movwf	T0CON		; = 62.5KHz clock rate, approx 1sec rollover
 		bsf	INTCON,TMR0IE	; Enable timer0 interrupt
 		bsf	INTCON,GIE	; Enable all interrupts
