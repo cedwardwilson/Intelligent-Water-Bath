@@ -1,6 +1,6 @@
 #include p18f87k22.inc
     
-	global	LCD_Alg, tempL, tempH, TempIn_Alg
+	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg
 	extern	offset, numbL, T_CrntH, T_CrntL, numbH
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset, UART_Transmit_Byte
@@ -11,6 +11,8 @@ tempL	    res 1		    ; reserve 3 bytes for tempory values
 tempH	    res 1	
 tempU	    res 1
 temp	    res 1
+timeL	    res 1
+timeH	    res 1
 Algorithms  code
   
 LCD_Alg				    ;follows procedure as outlined in lec9
@@ -72,5 +74,30 @@ TempIn_Alg		;converts input temperature to a comparable hex voltage
 	movlw	0x0
 	addwfc	tempH
 	return 
+	
+Time_alg
+	clrf	timeL
+	clrf	timeH
+	movf	units, W	    ; multiply units by 6 (as 0.1 min * 6 = no. of secs)
+	mullw	0x06
+	movf	PRODL, W
+	movwf	timeL		    ; puts low byte of this into timeL, high byte is always 0
+	movf	tens, W		    ; multiply tens by 60 (1 min = 60 secs)
+	mullw	0x3C
+	movf	PRODL, W	    ; low byte adds to timeL
+	addwf	timeL
+	movf	PRODH, W	    ; high byte adds to timeH (with carry, just in case)
+	addwfc	timeH
+	movf	hundreds, W	    ; 16x8 bit calculation: takes hundreds and
+	mullw	0x58		    ; multiplies by low byte of .600
+	movf	PRODL, W
+	addwf	timeL		    ; low byte of this into timeL
+	movf	PRODH, W
+	addwfc	timeH		    ; high byte (with carry) into timeH
+	movf	hundreds, W
+	mullw	0x02		    ; multiplies hundreds by high byte of .600
+	movf	PRODL, W
+	addwfc	timeH		    ; puts low byte of that into timeU
+        return
 	
 	end
