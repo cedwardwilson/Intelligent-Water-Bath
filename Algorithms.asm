@@ -1,6 +1,6 @@
 #include p18f87k22.inc
     
-	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH
+	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH, Power_Alg
 	extern	offset, numbL, T_CrntH, T_CrntL, numbH
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset, UART_Transmit_Byte
@@ -16,7 +16,7 @@ TimeDesH	    res 1
 Algorithms  code
   
 LCD_Alg				    ;follows procedure as outlined in lec9
-	movf	ADRESL, W	    ;Takes a hex numbert from LM35
+	movf	ADRESL, W	    ;Takes a hex number from LM35
 	movwf	temp
 	movwf	T_CrntL
 	movf	offset, W	    ; offset is the voltage LM35 reads at 0K
@@ -99,5 +99,19 @@ Time_alg
 	movf	PRODL, W
 	addwfc	TimeDesH	    ; puts low byte of that into timeU
         return
+	
+Power_Alg	    ;Tcurrent is in adresL/H and Tdes in in tempL/H
+	movwf	ADRESL, W
+	subwf	tempL, f
+	movwf	ADRESH, W
+	subwfb	tempH, f
+	movf	tempL, W
+	mullw	0x10
+	movwf	TimeDesL
+	movlw	0x0
+	addwfc	tempH
+	mullw	0x10
+	movwf	TimeDesL
+	return
 	
 	end
