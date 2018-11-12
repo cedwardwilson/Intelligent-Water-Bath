@@ -4,8 +4,8 @@
 	extern  ADC_Setup, ADC_Read		    
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
 	extern	FDLP, T_in_d_h, hundreds, tens, units
-	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table
-	extern	SecondTimer, UART_Transmit_Byte, UART_Setup
+	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table, TempIn_Alg
+	extern	SecondTimer, UART_Transmit_Byte, UART_Setup, Time_alg
 	global	delay, T_CrntL, T_CrntH, measure_loop, offset, TimerCount, DataCount
 	
 acs0	    udata_acs		    ; reserve data space in access ram
@@ -37,7 +37,7 @@ setup	bcf	EECON1, CFGS	    ; point to Flash program memory
 	goto	start
 	
 	; ******* Main programme ****************************************
-start 	movlw	0x0a		    ; define time in sec between data readings
+start 	movlw	0x0A		    ; define time in sec between data readings
 	movwf	DataCount
 	movlw	0x0D		    ; callibrates between mV and T readings
 	movwf	offset
@@ -47,6 +47,8 @@ start 	movlw	0x0a		    ; define time in sec between data readings
 	movwf	tens
 	movwf	units
 	call	T_in_d_h	    ; converts Temp in decimal to hex voltage
+	call	Time_alg
+	call	TempIn_Alg
 	call	SecondTimer	    ; sets up timer/interrupts for data readings
 	bra	measure_loop
 	
