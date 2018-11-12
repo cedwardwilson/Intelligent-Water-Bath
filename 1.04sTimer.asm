@@ -1,7 +1,7 @@
 #include p18f87k22.inc
 
 	global	    SecondTimer, DataLow, DataHigh, DataTop, DataUp
-	extern	    TimerCount, DataCount, ReadOut
+	extern	    TimerCount, DataCount, TimeL, TimeH
 	
 acs0    udata_acs		    ; named variables in access ram
     
@@ -14,7 +14,12 @@ DataLow	    res 1
 int_hi	code	    0x0008		; high vector, no low vector
 	btfss	    INTCON,TMR0IF	; check that this is timer0 interrup
 	retfie	    FAST		; if not then return
-	incf	    TimerCount		; increment TimerCount
+	incf	    TimeL
+	movlw	    0x0
+	cpfseq	    TimeL
+	bra	    Cont		; continue the interrupt loop
+	incf	    TimeH
+Cont	incf	    TimerCount		; increment TimerCount
 	movf	    TimerCount, W
 	cpfseq	    DataCount
 	bra	    ContInt		; if des. time has not elapsed, continue
