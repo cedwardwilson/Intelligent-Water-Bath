@@ -1,7 +1,7 @@
 	#include p18f87k22.inc
 
 	extern  LCD_Setup, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms 
-	extern  ADC_Setup, ADC_Read, Keypad, FDLP_Time, FDLP_Temp	    
+	extern  ADC_Setup, ADC_Read, Keypad, FDLP_Time, FDLP_Temp, Power_Alg	    
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
 	extern	T_in_d_h, hundreds, tens, units
 	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table, TempIn_Alg
@@ -101,6 +101,8 @@ TempLoop			    ; Routine A: input temp vs current temp
 	goto	TempLoop	    ; holds the system in this loop
 		
 PowerLoop			    ; Routine B: power calculation controls heat
+	call	TempIn_Alg	    ; Temp. input decimal to hex
+	call	ADC_Read	    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -108,6 +110,8 @@ PowerLoop			    ; Routine B: power calculation controls heat
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
+	call	Power_Alg	    ; this will work out the time needed
+	call	FDLP_Time	    ; this will run until this time is met
 	bra	PowerLoop
 	
 TimeLoop			    ; Routine C: input time vs current time
