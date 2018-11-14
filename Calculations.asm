@@ -1,6 +1,6 @@
 #include p18f87k22.inc
     
-    global	M_16x16, M_8x24, numbH, numbL, numbU, M_SelectHigh, M_Move
+    global	M_16x16, M_8x24, numbH, numbL, numbU, M_SelectHigh, M_Move, ru
     extern	delay, LCD_delay_ms, M_Table
     
 acs0    udata_acs 
