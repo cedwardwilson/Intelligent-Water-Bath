@@ -84,7 +84,7 @@ RoutineSelect
 Continue  
    	cpfseq	Bascii		    ; routine B or C select? 
 	bra	TimeLoop
-	bra	PowerLoop
+	bra	Power
 	
 TempLoop			    ; Routine A: input temp vs current temp
 	call	TempIn_Alg
@@ -100,9 +100,7 @@ TempLoop			    ; Routine A: input temp vs current temp
 	call	FDLP_Temp	    ; determines in heater should be on/off
 	goto	TempLoop	    ; holds the system in this loop
 		
-PowerLoop			    ; Routine B: power calculation controls heat
-	call	TempIn_Alg	    ; Temp. input decimal to hex
-	call	ADC_Read	    
+Power				    ; Routine B: power calculation controls heat
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -110,9 +108,20 @@ PowerLoop			    ; Routine B: power calculation controls heat
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	Power_Alg	    ; this will work out the time needed
-	call	FDLP_Time	    ; this will run until this time is met
-	bra	PowerLoop
+	call	LCD_Alg
+	call	Power_Alg
+PowerLoop			    ; we only want to set the desired time once
+	call	FDLP_Time	    ; so we only loop to PowerLoop, not the top
+	call	ADC_Read	    ; of the Power routine
+	movlw	.250
+	call	LCD_delay_ms
+	movlw	.250
+	call	LCD_delay_ms
+	movlw	.250
+	call	LCD_delay_ms
+	call	LCD_Clear
+	call	LCD_Alg
+	goto	PowerLoop
 	
 TimeLoop			    ; Routine C: input time vs current time
 	call	Time_alg
