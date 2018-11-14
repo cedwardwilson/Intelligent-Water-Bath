@@ -1,7 +1,7 @@
 #include p18f87k22.inc
     
 	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH, Power_Alg
-	extern	offset, numbL, T_CrntH, T_CrntL, numbH
+	extern	offset, numbL, T_CrntH, T_CrntL, numbH, ru
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset, UART_Transmit_Byte
 	extern	DataLow, DataHigh, DataUp, DataTop
@@ -11,8 +11,15 @@ tempL	    res 1		    ; reserve 3 bytes for tempory values
 tempH	    res 1	
 tempU	    res 1
 temp	    res 1
-TimeDesL	    res 1
-TimeDesH	    res 1
+Tdec	    res 1		    ; for power alg - decimal time difference
+Tunit	    res 1		    ; for power alg - units time difference
+Tten	    res 1		    ; for power alg - tens time difference
+Temporary   res 1		    ; temp value storage space
+TempCD	    res 1		    ; current temp. (decimals)
+TempCU	    res 1		    ; current temp. (units)
+TempCT	    res 1		    ; current temp. (tens)
+TimeDesL    res 1
+TimeDesH    res 1
 Algorithms  code
   
 LCD_Alg				    ;follows procedure as outlined in lec9
@@ -38,11 +45,13 @@ LCD_Alg				    ;follows procedure as outlined in lec9
 	call	M_8x24
 	call	M_SelectHigh
 	movwf	DataUp
+	movff	ru, TempCT
 	call	LCD_Send_Byte_D
 	call	M_Move
 	call	M_8x24
 	call	M_SelectHigh
 	movwf	DataHigh
+	movff	ru, TempCU
 	call	LCD_Send_Byte_D
 	call	M_Move
 	movlw	'.'			; Forcing a decimal place into the LCD
@@ -50,6 +59,7 @@ LCD_Alg				    ;follows procedure as outlined in lec9
 	call	M_8x24
 	call	M_SelectHigh
 	movwf	DataLow
+	movff	ru, TempCD
 	call	LCD_Send_Byte_D
 	return
 
@@ -100,18 +110,36 @@ Time_alg
 	addwfc	TimeDesH	    ; puts low byte of that into timeU
         return
 	
-Power_Alg	    ;Tcurrent is in adresL/H and Tdes in in tempL/H
-	movwf	ADRESL, W
-	subwf	tempL, f
-	movwf	ADRESH, W
-	subwfb	tempH, f
-	movf	tempL, W
-	mullw	0x10
-	movwf	TimeDesL
+Power_Alg			    ; input temp is in Hundreds, Tens, Units
+				    ; current temp is in TempCT, TempCU, TempCD
+	clrf	TimeDesL
+	clrf	TimeDesH
+	movf	TempCD, W	    
+	movff	units, Temporary
+	subwf	Temporary, f	    ; subtract the decimal temp contributions...
+	movff	Temporary, Tdec	    ; ...to get temp difference (decimal)
+	movf	TempCU, W
+	movff	tens, Temporary 
+	subwfb	Temporary, f	    ; sub with borrow the units temp contrib... 
+	movff	Temporary, Tunit    ; ...to get temp difference (units)
+	movf	TempCT, W
+	movff	hundreds, Temporary
+	subwfb	Temporary, f	    ; sub with borrow the tens temp contrib...
+	movff	Temporary, Tten	    ; ...to get temp difference (tens)
+	movf	Tten, W
+	mullw	0x0A		    ; multiply the tens column by 10...
+	movf	PRODL, W
+	addwf	Tunit, f	    ; ...and add this to the units...
+	movf	Tunit, W	    ; ...to get integer temp difference
+	mullw	0x10		    ; multiply by .16 to get a time difference
+	movff	PRODL, TimeDesL
+	movff	PRODH, TimeDesH
+	movf	Tdec, W		    ; now we deal with the decimal temp difference
+	mullw	0x02		    ; multiply by 2 (=1.6 rounded up)...
+	movf	PRODL, W	    ; ...to get the additional time difference
+	addwf	TimeDesL, f	    ; add this contribution in 
 	movlw	0x0
-	addwfc	tempH
-	mullw	0x10
-	movwf	TimeDesL
-	return
+	addwfc	TimeDesH, f	    ; add a carry if needed from the decimal contrib.
+	return	
 	
 	end
