@@ -112,11 +112,12 @@ Power				    ; Routine B: power calculation controls heat
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg
-	movff	units, PowerResL    ; save power vals whilst warming up
+	movff	units, PowerResL    ; save power vals (Tdesired) whilst warming up
 	movff	tens, PowerResH
 	movff	hundreds, PowerResU
-	clrf	units
-	movlw	0x06		    ; 6 minutes warm up time
+	movlw	0x05
+	movwf	units
+	movlw	0x04		    ; 5.7 minutes warm up time - is actually 357s (including x1.04 correction)
 	movwf	tens
 	clrf	hundreds
 	call	WarmUpTime
@@ -125,7 +126,7 @@ Power				    ; Routine B: power calculation controls heat
 	movff	PowerResU, hundreds 
 	call	Power_Alg
 PowerLoop			    ; we only want to set the desired time once
-	call	FDLP_Time	    ; so we only loop to PowerLoop, not the top
+				    ; so we only loop to PowerLoop, not the top
 	call	ADC_Read	    ; of the Power routine
 	movlw	.250
 	call	LCD_delay_ms
@@ -135,6 +136,7 @@ PowerLoop			    ; we only want to set the desired time once
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg
+	call	FDLP_Time
 	goto	PowerLoop
 	
 TimeLoop			    ; Routine C: input time vs current time
@@ -163,10 +165,10 @@ WarmUpTime
 	call	LCD_Clear
 	call	LCD_Alg		    ; converts hex to decimal and output to LCD
 	call	FDLP_Time
-	clrf	0x0		    ; this condition may not be working????
+	clrf	0x00		    ; this condition may not be working????
 	movf	PORTJ, W
-	cpfseq	0x0
-	goto	TimeLoop
+	cpfseq	0x00
+	goto	WarmUpTime
 	return
 	
 	; a delay subroutine if you need one, times around loop in delay_count
