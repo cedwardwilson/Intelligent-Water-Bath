@@ -22,6 +22,9 @@ Aascii	    res 1		    ; for routine select (A, B or C)
 Bascii	    res 1
 Cascii	    res 1
 Ascii	    res 1		    ; holds the ascii in routine select
+PowerResL   res 1		    ; for holding power vals whilst warming up
+PowerResH   res 1
+PowerResU   res 1
 
 tables	    udata	0x400	    ; reserve data anywhere in RAM (here at 0x400)
 myArray	    res		0x80	    ; reserve 128 bytes for message data
@@ -109,6 +112,17 @@ Power				    ; Routine B: power calculation controls heat
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg
+	movff	units, PowerResL    ; save power vals whilst warming up
+	movff	tens, PowerResH
+	movff	hundreds, PowerResU
+	clrf	units
+	movlw	0x06		    ; 6 minutes warm up time
+	movwf	tens
+	clrf	hundreds
+	call	WarmUpTime
+	movff	PowerResL, units
+	movff	PowerResH, tens
+	movff	PowerResU, hundreds 
 	call	Power_Alg
 PowerLoop			    ; we only want to set the desired time once
 	call	FDLP_Time	    ; so we only loop to PowerLoop, not the top
@@ -137,6 +151,23 @@ TimeLoop			    ; Routine C: input time vs current time
 	call	FDLP_Time
 	goto	TimeLoop
 	
+WarmUpTime
+	call	Time_alg
+	call	ADC_Read	    ; get out a hex value for voltage
+	movlw	.250
+	call	LCD_delay_ms
+	movlw	.250
+	call	LCD_delay_ms
+	movlw	.250
+	call	LCD_delay_ms
+	call	LCD_Clear
+	call	LCD_Alg		    ; converts hex to decimal and output to LCD
+	call	FDLP_Time
+	clrf	0x0		    ; this condition may not be working????
+	movf	PORTJ, W
+	cpfseq	0x0
+	goto	TimeLoop
+	return
 	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay	decfsz	delay_count	; decrement until zero
