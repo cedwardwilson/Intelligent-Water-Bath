@@ -131,11 +131,11 @@ Power_Alg			    ; input temp is in Hundreds, Tens, Units
 	movf	PRODL, W
 	addwf	Tunit, f	    ; ...and add this to the units...
 	movf	Tunit, W	    ; ...to get integer temp difference
-	mullw	0x10		    ; multiply by .16 to get a time difference
+	mullw	0x28		    ; multiply by .40 to get a time difference
 	movff	PRODL, TimeDesL
 	movff	PRODH, TimeDesH
 	movf	Tdec, W		    ; now we deal with the decimal temp difference
-	mullw	0x02		    ; multiply by 2 (=1.6 rounded up)...
+	mullw	0x04		    ; multiply by 4...
 	movf	PRODL, W	    ; ...to get the additional time difference
 	addwf	TimeDesL, f	    ; add this contribution in 
 	movlw	0x0
