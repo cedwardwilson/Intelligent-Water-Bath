@@ -46,7 +46,7 @@ M_8x24				;multiplies an 8-bit by a 24-bit
     return
   
 M_16Setup			;must run before a 16-bit by 16-bit multiply
-    call    M_Table
+    ;call    M_Table
     clrf    tmpnumLL		;ensure the temporary memeory locations clear
     clrf    tmpnumLH
     clrf    tmpnumLU
@@ -60,7 +60,7 @@ M_16Setup			;must run before a 16-bit by 16-bit multiply
     return
   
 M_24Setup			;must run before 1n 8-bit by 24-bit multiply
-    call    M_Table
+    ;call    M_Table
     clrf    tmpnumLL
     clrf    tmpnumLH
     clrf    tmpnumLU
