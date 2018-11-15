@@ -110,7 +110,7 @@ Time_alg
 	addwfc	TimeDesH	    ; puts low byte of that into timeU
         return
 	
-Power_Alg			    ; input temp is in Hundreds, Tens, Units
+Power_Alg			    ; input temp is in hundreds, tens, units
 				    ; current temp is in TempCT, TempCU, TempCD
 	clrf	TimeDesL
 	clrf	TimeDesH
