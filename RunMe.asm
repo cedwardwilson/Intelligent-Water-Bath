@@ -115,12 +115,14 @@ Power				    ; Routine B: power calculation controls heat
 	movff	units, PowerResL    ; save power vals (Tdesired) whilst warming up
 	movff	tens, PowerResH
 	movff	hundreds, PowerResU
-	movlw	0x05
+	movlw	0x01
 	movwf	units
-	movlw	0x04		    ; 5.7 minutes warm up time - is actually 357s (including x1.04 correction)
+	movlw	0x00		    ; 5.7 minutes warm up time - is actually 357s (including x1.04 correction)
 	movwf	tens
 	clrf	hundreds
 	call	WarmUpTime
+	clrf	TimeL
+	clrf	TimeH
 	movff	PowerResL, units
 	movff	PowerResH, tens
 	movff	PowerResU, hundreds 
