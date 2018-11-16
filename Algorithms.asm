@@ -20,6 +20,8 @@ TempCU	    res 1		    ; current temp. (units)
 TempCT	    res 1		    ; current temp. (tens)
 TimeDesL    res 1
 TimeDesH    res 1
+PACheck	    res 1		    ; for use in PowerAlg
+PASub	    res 1		    ; for use in PowerAlg
 Algorithms  code
   
 LCD_Alg				    ;follows procedure as outlined in lec9
@@ -114,18 +116,32 @@ Power_Alg			    ; input temp is in hundreds, tens, units
 				    ; current temp is in TempCT, TempCU, TempCD
 	clrf	TimeDesL
 	clrf	TimeDesH
+	movlw	0xf6
+	movwf	PASub
+	movlw	0x09
+	movwf	PACheck
 	movf	TempCD, W	    
 	movff	units, Temporary
-	subwf	Temporary, f	    ; subtract the decimal temp contributions...
+	subwf	Temporary, f	    ; subtract the decimal temp contributions
 	movff	Temporary, Tdec	    ; ...to get temp difference (decimal)
 	movf	TempCU, W
 	movff	tens, Temporary 
-	subwfb	Temporary, f	    ; sub with borrow the units temp contrib... 
+	subwfb	Temporary, f	    ; sub with borrow the units temp contri.
 	movff	Temporary, Tunit    ; ...to get temp difference (units)
 	movf	TempCT, W
 	movff	hundreds, Temporary
 	subwfb	Temporary, f	    ; sub with borrow the tens temp contrib...
 	movff	Temporary, Tten	    ; ...to get temp difference (tens)
+	movf	PACheck, W
+	cpfsgt	Tdec
+	bra	NextCheck
+	call	CorrectionDec
+NextCheck
+	movf	PACheck, W
+	cpfsgt	Tunit
+	bra	Conversion
+	call	CorrectionUnit
+Conversion
 	movf	Tten, W
 	mullw	0x0A		    ; multiply the tens column by 10...
 	movf	PRODL, W
@@ -141,5 +157,21 @@ Power_Alg			    ; input temp is in hundreds, tens, units
 	movlw	0x0
 	addwfc	TimeDesH, f	    ; add a carry if needed from the decimal contrib.
 	return	
+	
+CorrectionDec
+	movf	Tdec, W
+	movwf	Temporary
+	movf	PASub, W
+	subwf	Temporary, f
+	movff	Temporary, Tdec
+	return
+
+CorrectionUnit
+	movf	Tunit, W
+	movwf	Temporary
+	movf	PASub, W
+	subwf	Temporary, f
+	movff	Temporary, Tunit
+	return
 	
 	end
