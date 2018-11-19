@@ -2,7 +2,7 @@
     
     global	Keypad, tmpval, T_in_d_h, hundreds, tens, units, tmpval
     extern	delay, LCD_delay_ms
-    extern	LCD_Send_Byte_D, TempIn_Alg
+    extern	LCD_Send_Byte_D, TempIn_Alg, LCD_Alg
     
 acs0    udata_acs			; named variables in access ram
 tmpval		res 1
