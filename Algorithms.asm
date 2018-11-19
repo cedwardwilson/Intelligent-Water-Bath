@@ -1,7 +1,7 @@
 #include p18f87k22.inc
     
-	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH, Power_Alg
-	extern	offset, numbL, T_CrntH, T_CrntL, numbH, ru
+	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH, Power_Alg, PowerCheck
+	extern	offset, numbL, T_CrntH, T_CrntL, numbH, ru, TempLoop
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
 	extern	hundreds, tens, units, offset, UART_Transmit_Byte
 	extern	DataLow, DataHigh, DataUp, DataTop
@@ -155,7 +155,7 @@ Conversion
 	movf	PRODL, W	    ; ...to get the additional time difference
 	addwf	TimeDesL, f	    ; add this contribution in 
 	movlw	0x0
-	addwfc	TimeDesH, f	    ; add a carry if needed from the decimal contrib.
+	addwfc	TimeDesH, f	    ; add a carry if needed from the decimal contrib.\A      
 	return	
 	
 CorrectionDec
@@ -173,5 +173,43 @@ CorrectionUnit
 	subwf	Temporary, f
 	movff	Temporary, Tunit
 	return
+	
+PowerCheck	    
+	movf	hundreds, W
+	cpfsgt	TempCT		    ;compare high bytes (current/desired)?
+	bra	CheckStep1
+	bra	HeaterOff
+	
+CheckStep1	    ;are the high bytes equal (current/desired)?
+	cpfseq	TempCT
+	return 
+	
+CheckStep2	    ;compare low bytes (current/desired)?
+	movf	tens, W
+	cpfsgt	TempCU
+	bra	CheckStep3
+	bra	HeaterOff
+	
+CheckStep3	    ;are the low bytes equal (current/desired)?
+	cpfseq	TempCU
+	return
+
+CheckStep4  
+	movf	units, W
+	cpfsgt	TempCD
+	bra	CheckStep5
+	bra	HeaterOff
+
+CheckStep5  
+	cpfseq	TempCD
+	return
+	bra	HeaterOff
+	return 
+	
+HeaterOff
+	clrf	TRISJ
+	movlw	0x00
+	movwf	PORTJ
+	call	TempLoop	
 	
 	end
