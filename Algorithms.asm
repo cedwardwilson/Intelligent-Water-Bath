@@ -1,115 +1,133 @@
 #include p18f87k22.inc
-    
-	global	LCD_Alg, tempL, tempH, TempIn_Alg, Time_alg, TimeDesL, TimeDesH, Power_Alg, PowerCheck
-	extern	offset, numbL, T_CrntH, T_CrntL, numbH, ru, TempLoop
-	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24
-	extern	hundreds, tens, units, offset, UART_Transmit_Byte
-	extern	DataLow, DataHigh, DataUp, DataTop
+; File Overview:
+; Contains 4 algorithms: LCD_Alg, TempIn_Alg, Time_alg, Power_Alg
 	
-acs0	    udata_acs		    ; reserve data space in access ram	
-tempL	    res 1		    ; reserve 3 bytes for tempory values
-tempH	    res 1	
-tempU	    res 1
-temp	    res 1
-Tdec	    res 1		    ; for power alg - decimal time difference
-Tunit	    res 1		    ; for power alg - units time difference
-Tten	    res 1		    ; for power alg - tens time difference
-Temporary   res 1		    ; temp value storage space
-TempCD	    res 1		    ; current temp. (decimals)
-TempCU	    res 1		    ; current temp. (units)
-TempCT	    res 1		    ; current temp. (tens)
-TimeDesL    res 1
-TimeDesH    res 1
-PACheck	    res 1		    ; for use in PowerAlg
-PASub	    res 1		    ; for use in PowerAlg
+	; External and global routines/variables
+	global	tempL, tempH, TimeDesL, TimeDesH
+	global	Power_Alg, PowerCheck, LCD_Alg, TempIn_Alg, Time_alg
+	extern	offset, numbL, numbH, T_CrntH, T_CrntL, tens, units, decimals
+	extern	DataLow, DataHigh, DataUp, DataTop, ru
+	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24, TempLoop
+	
+	; Named variables in access ram	
+acs0	    udata_acs		    
+tempL	    res 1		    ; Reserve low byte for temporary values
+tempH	    res 1		    ; Reserve high byte for temporary values
+tempU	    res 1		    ; Reserve upper byte for temporary values
+temp	    res 1		    ; For storing values from LM35
+Tdec	    res 1		    ; For power alg - decimal time difference
+Tunit	    res 1		    ; For power alg - units time difference
+Tten	    res 1		    ; For power alg - tens time difference
+Temporary   res 1		    ; Temporary value storage space
+TempCD	    res 1		    ; Current temperature (decimals)
+TempCU	    res 1		    ; Current temperature (units)
+TempCT	    res 1		    ; Current temperature (tens)
+TimeDesL    res 1		    ; Calculated desired time (low byte)
+TimeDesH    res 1		    ; Calculated desired time (high byte)
+PACheck	    res 1		    ; The value 9 (for use in Power_Alg)
+PASub	    res 1		    ; The value 246 (for use in Power_Alg)
+
 Algorithms  code
   
-LCD_Alg				    ;follows procedure as outlined in lec9
-	movf	ADRESL, W	    ;Takes a hex number from LM35
+	; Takes analogue reading from LM35 (in mV) and converts this to an 
+	; equivalent temperature in degrees Celsius (and outputs to LCD)
+	;			    - Requires LM35 connection, offset
+	;			    - Sets TempCD, TempCU, TempCT 
+LCD_Alg				   
+	movf	ADRESL, W	    ; Stores mV reading (low byte) from LM35
 	movwf	temp
-	movwf	T_CrntL
-	movf	offset, W	    ; offset is the voltage LM35 reads at 0K
-	subwf	temp, f		    ;subtract the offset voltage from LM35 value
-	movf	temp, W		    ;move this new voltage into temp
+	movwf	T_CrntL		    
+	movf	offset, W	    ; Offset is the mV LM35 reading at 0 deg. C
+	subwf	temp, f		    
+	movf	temp, W		    ; Move this corrected voltage into 'temp'
 	movwf	numbL
-	movf	ADRESH, W
+	movf	ADRESH, W	    ; Stores mV reading (high byte) from LM35
 	movwf	temp
 	movwf	T_CrntH
 	movlw	0x0
 	subwfb	temp,f
 	movf	temp, W
 	movwf	numbH
-	call	M_16x16
+	call	M_16x16		    ; Start conversion - hex. to decimal 
 	call	M_SelectHigh
 	movwf	DataTop
-	call	LCD_Send_Byte_D
-	call	M_Move
+	call	LCD_Send_Byte_D	    ; Sends the 'hundreds' column to LCD
+	call	M_Move		    ; Continues conversion
 	call	M_8x24
 	call	M_SelectHigh
 	movwf	DataUp
-	movff	ru, TempCT
-	call	LCD_Send_Byte_D
-	call	M_Move
+	movff	ru, TempCT	    ; Stores current temperature (tens) 
+	call	LCD_Send_Byte_D	    ; Sends the 'tens' column to LCD
+	call	M_Move		    ; Continues conversion
 	call	M_8x24
 	call	M_SelectHigh
 	movwf	DataHigh
-	movff	ru, TempCU
-	call	LCD_Send_Byte_D
+	movff	ru, TempCU	    ; Stores current temperature (units)
+	call	LCD_Send_Byte_D	    ; Sends the 'units' column to LCD
 	call	M_Move
-	movlw	'.'			; Forcing a decimal place into the LCD
-	call	LCD_Send_Byte_D
-	call	M_8x24
+	movlw	'.'		    ; Forcing a decimal place onto the LCD
+	call	LCD_Send_Byte_D	
+	call	M_8x24		    ; Continues conversion
 	call	M_SelectHigh
 	movwf	DataLow
-	movff	ru, TempCD
-	call	LCD_Send_Byte_D
+	movff	ru, TempCD	    ; Stores current temperature (decimals)
+	call	LCD_Send_Byte_D	    ; Sends the 'decimals' column to LCD
 	return
 
-TempIn_Alg		;converts input temperature to a comparable hex voltage
+	; Converts the keypad input (temperature) to the equivalent hex. voltage 
+	;			    - Requires button presses (through T_in_d_h)
+	;			    - Sets tempL, tempH, tempU
+	;			    - Sets W to 0x0
+	; N.B. temperatures are 10 times smaller than voltages (and offset)
+TempIn_Alg			    
 	clrf	tempL
 	clrf	tempH
 	clrf	tempU
-	movf	tens, W		
-	mullw	0x0A		    ;multiply 'tens' column by ten
+	movf	units, W		
+	mullw	0x0A		    ; Multiply 'units' column by ten
 	movf	PRODL, W	    
 	movwf	tempL
-	movf	units, W	    ;add the 'units' column to this 
+	movf	decimals, W	    ; Add the 'decimals' column to this 
 	addwf	tempL
-	movf	hundreds, W	    
-	mullw	0x64		    ;multiply the 'hundreds' column by 100
+	movf	tens, W	    
+	mullw	0x64		    ; Multiply the 'tens' column by 100
 	movf	PRODL, W
-	addwf	tempL		    ;this is the low byte of our mV reading
+	addwf	tempL		    ; This is the low byte of our mV reading
 	movf	PRODH, W
-	addwfc	tempH, f	    ;this is the high byte of our mV reading 
+	addwfc	tempH, f	    ; This is the high byte of our mV reading 
 	movf	offset, W
-	addwf	tempL		    ;removes the offset
+	addwf	tempL		    ; Accounts for the offset
 	movlw	0x0
 	addwfc	tempH
 	return 
 	
+	; Converts the keypad input (time) to a usuable hex. time 
+	;			    - Requires button presses (through T_in_d_h)
+	;			    - Sets TimeDesL, TimeDesH
+	; N.B. user inputs a time in minutes - this also converts that to secs.
 Time_alg
 	clrf	TimeDesL
 	clrf	TimeDesH
-	movf	units, W	    ; multiply units by 6 (as 0.1 min * 6 = no. of secs)
+	movf	decimals, W	    ; Multiply decimals by 6
 	mullw	0x06
 	movf	PRODL, W
-	movwf	TimeDesL	    ; puts low byte of this into timeL, high byte is always 0
-	movf	tens, W		    ; multiply tens by 60 (1 min = 60 secs)
+	movwf	TimeDesL	    ; Puts low byte of this into TimeDesL
+	movf	units, W	    ; Multiply units by 60 
 	mullw	0x3C
-	movf	PRODL, W	    ; low byte adds to timeL
+	movf	PRODL, W	    ; Low byte adds to TimeDesL
 	addwf	TimeDesL
-	movf	PRODH, W	    ; high byte adds to timeH (with carry, just in case)
+	movf	PRODH, W	    ; High byte adds to TimeDesH 
 	addwfc	TimeDesH
-	movf	hundreds, W	    ; 16x8 bit calculation: takes hundreds and
+	movf	tens, W		    ; 16x8 bit calculation: takes tens and
 	mullw	0x58		    ; multiplies by low byte of .600
 	movf	PRODL, W
-	addwf	TimeDesL	    ; low byte of this into timeL
+	addwf	TimeDesL	    ; Low byte of this adds to TimeDesL
 	movf	PRODH, W
-	addwfc	TimeDesH	    ; high byte (with carry) into timeH
-	movf	hundreds, W
-	mullw	0x02		    ; multiplies hundreds by high byte of .600
+	addwfc	TimeDesH	    ; High byte of this adds to TimeDesH
+	movf	tens, W
+	mullw	0x02		    ; Multiplies tens by high byte of .600
 	movf	PRODL, W
-	addwfc	TimeDesH	    ; puts low byte of that into timeU
+	addwfc	TimeDesH	    ; Puts low byte of that into TimeDesH
         return
 	
 Power_Alg			    ; input temp is in hundreds, tens, units
@@ -121,15 +139,15 @@ Power_Alg			    ; input temp is in hundreds, tens, units
 	movlw	0x09
 	movwf	PACheck
 	movf	TempCD, W	    
-	movff	units, Temporary
+	movff	decimals, Temporary
 	subwf	Temporary, f	    ; subtract the decimal temp contributions
 	movff	Temporary, Tdec	    ; ...to get temp difference (decimal)
 	movf	TempCU, W
-	movff	tens, Temporary 
+	movff	units, Temporary 
 	subwfb	Temporary, f	    ; sub with borrow the units temp contri.
 	movff	Temporary, Tunit    ; ...to get temp difference (units)
 	movf	TempCT, W
-	movff	hundreds, Temporary
+	movff	tens, Temporary
 	subwfb	Temporary, f	    ; sub with borrow the tens temp contrib...
 	movff	Temporary, Tten	    ; ...to get temp difference (tens)
 	movf	PACheck, W
@@ -175,7 +193,7 @@ CorrectionUnit
 	return
 	
 PowerCheck	    
-	movf	hundreds, W
+	movf	tens, W
 	cpfsgt	TempCT		    ;compare high bytes (current/desired)?
 	bra	CheckStep1
 	bra	HeaterOff
@@ -185,7 +203,7 @@ CheckStep1	    ;are the high bytes equal (current/desired)?
 	return 
 	
 CheckStep2	    ;compare low bytes (current/desired)?
-	movf	tens, W
+	movf	units, W
 	cpfsgt	TempCU
 	bra	CheckStep3
 	bra	HeaterOff
@@ -195,7 +213,7 @@ CheckStep3	    ;are the low bytes equal (current/desired)?
 	return
 
 CheckStep4  
-	movf	units, W
+	movf	decimals, W
 	cpfsgt	TempCD
 	bra	CheckStep5
 	bra	HeaterOff
