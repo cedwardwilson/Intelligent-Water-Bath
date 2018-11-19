@@ -3,10 +3,10 @@
 	extern  LCD_Setup, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms 
 	extern  ADC_Setup, ADC_Read, Keypad, FDLP_Time, FDLP_Temp, Power_Alg	    
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
-	extern	T_in_d_h, hundreds, tens, units
+	extern	T_in_d_h, hundreds, tens, units, TimeDesL, TimeDesH, tmpval
 	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table, TempIn_Alg
-	extern	SecondTimer, UART_Transmit_Byte, UART_Setup, Time_alg
-	global	delay, T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH
+	extern	SecondTimer, UART_Transmit_Byte, UART_Setup, Time_alg, PowerCheck
+	global	delay, T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH, TempLoop
 	
 acs0	    udata_acs		    ; reserve data space in access ram
 counter	    res 1		    ; reserve one byte for a counter variable
@@ -112,12 +112,13 @@ Power				    ; Routine B: power calculation controls heat
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg
+	call	PowerCheck
 	movff	units, PowerResL    ; save power vals (Tdesired) whilst warming up
 	movff	tens, PowerResH
 	movff	hundreds, PowerResU
-	movlw	0x01
+	movlw	0x09
 	movwf	units
-	movlw	0x00		    ; 5.7 minutes warm up time - is actually 357s (including x1.04 correction)
+	movlw	0x05		    ; 5.9 minutes warm up time - is actually 370s (including x1.04 correction)
 	movwf	tens
 	clrf	hundreds
 	call	WarmUpTime
@@ -126,7 +127,11 @@ Power				    ; Routine B: power calculation controls heat
 	movff	PowerResL, units
 	movff	PowerResH, tens
 	movff	PowerResU, hundreds 
-	call	Power_Alg
+	call	Power_Alg	    ; after this, TimeDesL/H store the time to run for
+	movlw	0xB4		    ; this is an offset for the levelling off time
+	subwf	TimeDesL, f	    ; of 360s (about 9 degrees)
+	movlw	0x00
+	subwfb	TimeDesH, f
 PowerLoop			    ; we only want to set the desired time once
 				    ; so we only loop to PowerLoop, not the top
 	call	ADC_Read	    ; of the Power routine
