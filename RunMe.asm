@@ -1,9 +1,11 @@
 	#include p18f87k22.inc
-
+; The RunMe file is the central file to the whole project - it shows the 
+; progression of the code from Temp/Time input to Routine Select and then 
+; through each routine as needed 
 	extern  LCD_Setup, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms 
 	extern  ADC_Setup, ADC_Read, Keypad, FDLP_Time, FDLP_Temp, Power_Alg	    
 	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
-	extern	T_in_d_h, hundreds, tens, units, TimeDesL, TimeDesH, tmpval
+	extern	T_in_d_h, tens, units, decimals, TimeDesL, TimeDesH, tmpval
 	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table, TempIn_Alg
 	extern	SecondTimer, UART_Transmit_Byte, UART_Setup, Time_alg, PowerCheck
 	global	delay, T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH, TempLoop
@@ -62,9 +64,9 @@ start 	movlw	0x0A		    ; define time in sec between data readings
 	movwf	offset
 	clrf	PORTJ, ACCESS	    ;cleared for use later with powering heater
 	movlw	0x0A		    ; for comparison loops later (in T_in_d_h)
-	movwf	hundreds
 	movwf	tens
 	movwf	units
+	movwf	decimals
 	call	T_in_d_h	    ; converts Temp in decimal to hex voltage
 	movlw	.250
 	call	LCD_delay_ms
@@ -113,23 +115,23 @@ Power				    ; Routine B: power calculation controls heat
 	call	LCD_Clear
 	call	LCD_Alg
 	call	PowerCheck
-	movff	units, PowerResL    ; save power vals (Tdesired) whilst warming up
-	movff	tens, PowerResH
-	movff	hundreds, PowerResU
+	movff	decimals, PowerResL    ; save power vals (Tdesired) whilst warming up
+	movff	units, PowerResH
+	movff	tens, PowerResU
 	movlw	0x09
-	movwf	units
+	movwf	decimals
 	movlw	0x05		    ; 5.9 minutes warm up time - is actually 370s (including x1.04 correction)
-	movwf	tens
-	clrf	hundreds
+	movwf	units
+	clrf	tens
 	call	WarmUpTime
 	clrf	TimeL
 	clrf	TimeH
-	movff	PowerResL, units
-	movff	PowerResH, tens
-	movff	PowerResU, hundreds 
+	movff	PowerResL, decimals
+	movff	PowerResH, units
+	movff	PowerResU, tens 
 	call	Power_Alg	    ; after this, TimeDesL/H store the time to run for
-	movlw	0xB4		    ; this is an offset for the levelling off time
-	subwf	TimeDesL, f	    ; of 360s (about 9 degrees)
+	movlw	0xF0		    ; this is an offset for the levelling off time
+	subwf	TimeDesL, f	    ; of 240s (*1.04 therefore actually 250s)
 	movlw	0x00
 	subwfb	TimeDesH, f
 PowerLoop			    ; we only want to set the desired time once
