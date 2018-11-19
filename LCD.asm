@@ -1,14 +1,18 @@
 #include p18f87k22.inc
+; File Overview:
+; Contains all LCD functions. 
+    
+	; External and global routines/variables
+	global  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Move, LCD_delay
+	global  LCD_Send_Byte_D, LCD_delay_ms, LCD_Write_Hex, LCD_Send_Nib
 
-    global  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Move, LCD_delay, LCD_Send_Byte_D, LCD_delay_ms, LCD_Write_Hex, LCD_Send_Nib
-
-acs0    udata_acs		    ; named variables in access ram
-
+	; Named variables in access ram
+acs0    udata_acs		    
 LCD_cnt_l   res 1		    ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h   res 1		    ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms  res 1		    ; reserve 1 byte for ms counter
 LCD_tmp	    res 1		    ; reserve 1 byte for temporary use
-LCD_counter res 1		    ; reserve 1 byte for counting through nessage
+LCD_counter res 1		    ; reserve 1 byte for counting through message
 
 acs_ovr	    access_ovr
 LCD_hex_tmp res 1		    ; reserve 1 byte for variable LCD_hex_tmp	
@@ -154,17 +158,17 @@ lcdlp1	decf 	LCD_cnt_l,F	    ; no carry when 0x00 -> 0xff
 	return			    ; carry reset so return
 
 
-LCD_Clear	    ; display clear
+LCD_Clear	    ; Clear LCD screen
 	movlw	b'00000001'	
 	call	LCD_Send_Byte_I
 	movlw	.2		    ; wait 2ms
 	call	LCD_delay_ms
 	return 
 	
-LCD_Move	    ;moves LCD cursor to 2nd line 
+LCD_Move	    ; Moves LCD cursor to 2nd line 
 	movlw	b'11000000'
 	call	LCD_Send_Byte_I
-	movlw	.2
+	movlw	.2		    ; wait 2ms
 	call	LCD_delay_ms
 	return
 
