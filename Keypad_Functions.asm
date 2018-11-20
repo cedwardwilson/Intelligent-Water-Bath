@@ -4,21 +4,21 @@
 ; T_in_d_h.
 ; Both utilise PORTE.
     
-    ; External and global routines/variables
-    global	Keypad, tmpval, T_in_d_h, tens, units, decimals
-    extern	delay, LCD_delay_ms, LCD_Send_Byte_D, TempIn_Alg, LCD_Alg
+	    ; External and global routines/variables
+	    extern	delay, LCD_delay_ms, LCD_Send_Byte_D, TempIn_Alg, LCD_Alg
+	    global	Keypad, tmpval, T_in_d_h, tens, units, decimals
     
-    ; Named variables in access ram
-acs0    udata_acs			
-tmpval		res 1		    ; A temporary value 
-b_add_LCD	res 1		    ; For binary addresses, used by LCD
-b_add_d_h	res 1		    ; For binary addresses, used by Dec. to Hex.
-decimals	res 1		    ; For T_in_d_h
-units		res 1		    ; " 
-tens		res 1		    ; " 
-tenLCD		res 1		    ; For outputting to LCD
-unitLCD		res 1		    ; "
-decLCD		res 1		    ; "
+	    ; Named variables in access ram
+acs0	    udata_acs			
+tmpval	    res 1		    ; A temporary value 
+b_add_LCD   res 1		    ; For binary addresses, used by LCD
+b_add_d_h   res 1		    ; For binary addresses, used by Dec. to Hex.
+decimals    res 1		    ; For T_in_d_h
+units	    res 1		    ; " 
+tens	    res 1		    ; " 
+tenLCD	    res 1		    ; For outputting to LCD
+unitLCD	    res 1		    ; "
+decLCD	    res 1		    ; "
 	
 Keypad_Functions	code
 	
