@@ -3,11 +3,11 @@
 ; Contains 4 algorithms: LCD_Alg, TempIn_Alg, Time_alg, Power_Alg
 	
 	; External and global routines/variables
-	global	tempL, tempH, TimeDesL, TimeDesH
-	global	Power_Alg, PowerCheck, LCD_Alg, TempIn_Alg, Time_alg
 	extern	offset, numbL, numbH, T_CrntH, T_CrntL, tens, units, decimals
 	extern	DataLow, DataHigh, DataUp, DataTop, ru
 	extern	M_16x16, M_SelectHigh, LCD_Send_Byte_D, M_Move, M_8x24, TempLoop
+	global	tempL, tempH, TimeDesL, TimeDesH
+	global	Power_Alg, PowerCheck, LCD_Alg, TempIn_Alg, Time_alg
 	
 	; Named variables in access ram	
 acs0	    udata_acs		    
