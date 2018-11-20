@@ -22,6 +22,7 @@ decLCD		res 1		    ; "
 	
 Keypad_Functions	code
 	
+	; Keypad:
 	; Moves appropriate ascii character to W 
 	; Requires button press on keypad, and lookup table 'Keys Translator'
 	; Sets W to ascii character of button pressed
@@ -55,6 +56,7 @@ Keypad
 	movf	tmpval, W
 	return  
 	
+	; T_in_d_h:
 	; Converts decimal kepyad input to hex. and stores this as a 
 	; desired time/temperature
 	;			- Requires 3 button presses on keypad
