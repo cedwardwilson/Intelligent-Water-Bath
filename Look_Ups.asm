@@ -1,17 +1,76 @@
 #include p18f87k22.inc
+; File Overview:
+; Sets up 3 look-up tables: LookUp_d_h, Keys_Translator, and M_Table
+; LookUp_d_h - uses FSR0 and Bank 5 
+; Keys_Translator - uses FSR1 and Bank 4
+; M_Table - uses FSR2 and Bank 6
     
+    ; External and global routines/variables
     global	    Keys_Translator, LookUp_d_h, M_Table
     extern	    tmpval
     
 Look_Ups code
 
-Keys_Translator		;sets the values of the keys of our keypad
-	movlb	4			;use Bank 4
-	lfsr	FSR1, 0x480		;start at 0x480 address in Bank 4
-	movlw	'1'			;store ascii characters in files in Bank 4
+	; LookUp_d_h:
+	; Stores values 0 - 9 at the equivalent binary file address as 
+	; corresponds to a button press on the keypad
+	; Uses FSR0 and Bank 5
+LookUp_d_h		
+	movlb	5			
+	lfsr	FSR0, 0x580		; Start at 0x580 address in Bank 5
+	movlw	0x01			
 	movwf	tmpval
 	movlw	0x77
-	movff	tmpval,PLUSW1		;N.B. PLUSWn does not change FSRn
+	movff	tmpval,PLUSW0		; N.B. PLUSW0 does not change FSR0
+	movlw	0x02
+	movwf	tmpval
+	movlw	0xB7
+	movff	tmpval,PLUSW0
+	movlw	0x03
+	movwf	tmpval
+	movlw	0xD7
+	movff	tmpval,PLUSW0
+	movlw	0x04
+	movwf	tmpval
+	movlw	0x7B
+	movff	tmpval,PLUSW0
+	movlw	0x05
+	movwf	tmpval
+	movlw	0xBB 
+	movff	tmpval,PLUSW0
+	movlw	0x06
+	movwf	tmpval
+	movlw	0xDB
+	movff	tmpval,PLUSW0
+	movlw	0x07
+	movwf	tmpval
+	movlw	0x7D
+	movff	tmpval,PLUSW0
+	movlw	0x08
+	movwf	tmpval
+	movlw	0xBD
+	movff	tmpval,PLUSW0
+	movlw	0x09
+	movwf	tmpval
+	movlw	0xDD
+	movff	tmpval,PLUSW0
+	movlw	0x0
+	movwf	tmpval
+	movlw	0xBE
+	movff	tmpval, PLUSW0
+	return
+	
+	; Keys_Translator:
+	; Stores ascii code for  0 - 9, A - D, * and # at the equivalent binary 
+	; file address as corresponds to a button press on the keypad
+	; Uses FSR1 and Bank 4
+ Keys_Translator		
+	movlb	4			
+	lfsr	FSR1, 0x480		; Start at 0x480 address in Bank 4
+	movlw	'1'			
+	movwf	tmpval
+	movlw	0x77
+	movff	tmpval,PLUSW1		; N.B. PLUSW1 does not change FSR1
 	movlw	'2'
 	movwf	tmpval
 	movlw	0xB7
@@ -70,98 +129,57 @@ Keys_Translator		;sets the values of the keys of our keypad
 	movff	tmpval,PLUSW1
 	movlw	'#'
 	movwf	tmpval
-	movlw	0xDE			;keypad can now write 'TEMP' and 'TIME'
-	movff	tmpval,PLUSW1		;as well as numbers 0-9
+	movlw	0xDE			
+	movff	tmpval,PLUSW1		
 	return
 
-LookUp_d_h		;sets the values of the keys of our keypad
-	movlb	5			;use Bank 5
-	lfsr	FSR0, 0x580		;start at 0x580 address in Bank 5
-	movlw	0x01			;store ascii characters in files in Bank 5
-	movwf	tmpval
-	movlw	0x77
-	movff	tmpval,PLUSW0		;N.B. PLUSWn does not change FSRn
-	movlw	0x02
-	movwf	tmpval
-	movlw	0xB7
-	movff	tmpval,PLUSW0
-	movlw	0x03
-	movwf	tmpval
-	movlw	0xD7
-	movff	tmpval,PLUSW0
-	movlw	0x04
-	movwf	tmpval
-	movlw	0x7B
-	movff	tmpval,PLUSW0
-	movlw	0x05
-	movwf	tmpval
-	movlw	0xBB 
-	movff	tmpval,PLUSW0
-	movlw	0x06
-	movwf	tmpval
-	movlw	0xDB
-	movff	tmpval,PLUSW0
-	movlw	0x07
-	movwf	tmpval
-	movlw	0x7D
-	movff	tmpval,PLUSW0
-	movlw	0x08
-	movwf	tmpval
-	movlw	0xBD
-	movff	tmpval,PLUSW0
-	movlw	0x09
-	movwf	tmpval
-	movlw	0xDD
-	movff	tmpval,PLUSW0
-	movlw	0x0
-	movwf	tmpval
-	movlw	0xBE
-	movff	tmpval, PLUSW0
+	; M_Table:
+	; Stores ascii code for  0 - 9 at the equivalent hex file address as 
+	; corresponds to their values, 0 - 9
+	; Uses FSR2 and Bank 6
+M_Table			   
+	movlb   6		    
+	lfsr    FSR2, 0x680	    ; Start at 0x680 address in Bank 6
+        movlw   '1'		    
+        movwf   tmpval
+        movlw   0x1
+	movff   tmpval,PLUSW2	    ; N.B. PLUSW2 does not change FSR2
+	movlw   '2'
+	movwf   tmpval
+	movlw   0x2
+	movff   tmpval,PLUSW2
+	movlw   '3'
+	movwf   tmpval
+	movlw   0x3
+	movff   tmpval,PLUSW2
+	movlw   '4'
+	movwf   tmpval
+	movlw   0x4
+	movff   tmpval,PLUSW2
+	movlw   '5'
+    	movwf   tmpval
+	movlw   0x5 
+	movff   tmpval,PLUSW2
+	movlw   '6'
+	movwf   tmpval
+	movlw   0x6
+	movff   tmpval,PLUSW2
+	movlw   '7'
+	movwf   tmpval
+	movlw   0x7
+	movff   tmpval,PLUSW2
+	movlw   '8'
+	movwf   tmpval
+	movlw   0x8
+	movff   tmpval,PLUSW2
+	movlw   '9'
+	movwf   tmpval
+	movlw   0x9
+	movff   tmpval,PLUSW2
+	movlw   '0'
+	movwf   tmpval
+	movlw   0x0
+	movff   tmpval,PLUSW2
 	return
 
-M_Table			    ;lookup table (basically)
-    movlb   6		    ;use Bank 6
-    lfsr    FSR2, 0x680	    ;start at 0x680 address in Bank 6
-    movlw   '1'		    ;ascii characters into files in Bank 6
-    movwf   tmpval
-    movlw   0x1
-    movff   tmpval,PLUSW2
-    movlw   '2'
-    movwf   tmpval
-    movlw   0x2
-    movff   tmpval,PLUSW2
-    movlw   '3'
-    movwf   tmpval
-    movlw   0x3
-    movff   tmpval,PLUSW2
-    movlw   '4'
-    movwf   tmpval
-    movlw   0x4
-    movff   tmpval,PLUSW2
-    movlw   '5'
-    movwf   tmpval
-    movlw   0x5 
-    movff   tmpval,PLUSW2
-    movlw   '6'
-    movwf   tmpval
-    movlw   0x6
-    movff   tmpval,PLUSW2
-    movlw   '7'
-    movwf   tmpval
-    movlw   0x7
-    movff   tmpval,PLUSW2
-    movlw   '8'
-    movwf   tmpval
-    movlw   0x8
-    movff   tmpval,PLUSW2
-    movlw   '9'
-    movwf   tmpval
-    movlw   0x9
-    movff   tmpval,PLUSW2
-    movlw   '0'
-    movwf   tmpval
-    movlw   0x0
-    movff   tmpval,PLUSW2
-    return
-
-    end
+	end
