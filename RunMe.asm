@@ -2,15 +2,18 @@
 ; The RunMe file is the central file to the whole project - it shows the 
 ; progression of the code from Temp/Time input to Routine Select and then 
 ; through each routine as needed 
-	extern  LCD_Setup, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms 
-	extern  ADC_Setup, ADC_Read, Keypad, FDLP_Time, FDLP_Temp, Power_Alg	    
-	extern	M_16x16, M_8x24, numbL, numbH, numbU, M_SelectHigh, M_Move
-	extern	T_in_d_h, tens, units, decimals, TimeDesL, TimeDesH, tmpval
-	extern	LCD_Alg, Keys_Translator, LookUp_d_h, M_Table, TempIn_Alg
-	extern	SecondTimer, UART_Transmit_Byte, UART_Setup, Time_alg, PowerCheck
-	global	delay, T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH, TempLoop
 	
-acs0	    udata_acs		    ; reserve data space in access ram
+	; External and global routines/variables
+	extern  LCD_Setup, ADC_Setup, UART_Setup, SecondTimer
+	extern	FDLP_Time, FDLP_Temp, Time_alg, Power_Alg, TempIn_Alg, LCD_Alg
+	extern  ADC_Read, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms, PowerCheck
+	extern	Keys_Translator, LookUp_d_h, M_Table, Keypad, T_in_d_h
+	extern	tens, units, decimals, TimeDesL, TimeDesH
+	global	T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH
+	global	delay, TempLoop
+	
+	; Named variables in access ram
+acs0	    udata_acs		    
 counter	    res 1		    ; reserve one byte for a counter variable
 delay_count res 1		    ; reserve one byte for counter in the delay routine
 offset	    res 1		    ; reserve one byte for the offset in the V-T conversion
@@ -130,9 +133,9 @@ Power				    ; Routine B: power calculation controls heat
 	movff	PowerResH, units
 	movff	PowerResU, tens 
 	call	Power_Alg	    ; after this, TimeDesL/H store the time to run for
-	movlw	0xF0		    ; this is an offset for the levelling off time
+	movlw	0x2C		    ; this is an offset for the levelling off time
 	subwf	TimeDesL, f	    ; of 240s (*1.04 therefore actually 250s)
-	movlw	0x00
+	movlw	0x01
 	subwfb	TimeDesH, f
 PowerLoop			    ; we only want to set the desired time once
 				    ; so we only loop to PowerLoop, not the top
