@@ -29,6 +29,7 @@ PASub	    res 1		    ; The value 246 (for use in Power_Alg)
 
 Algorithms  code
   
+	; LCD_Alg:
 	; Takes analogue reading from LM35 (in mV) and converts this to an 
 	; equivalent temperature in degrees Celsius (and outputs to LCD)
 	;			    - Requires LM35 connection, offset
@@ -74,6 +75,7 @@ LCD_Alg
 	call	LCD_Send_Byte_D	    ; Sends the 'decimals' column to LCD
 	return
 
+	; TempIn_Alg
 	; Converts the keypad input (temperature) to the equivalent hex. voltage 
 	;			    - Requires button presses (through T_in_d_h)
 	;			    - Sets tempL, tempH, tempU
@@ -101,6 +103,7 @@ TempIn_Alg
 	addwfc	tempH
 	return 
 	
+	; Time_alg:
 	; Converts the keypad input (time) to a usuable hex. time 
 	;			    - Requires button presses (through T_in_d_h)
 	;			    - Sets TimeDesL, TimeDesH
@@ -119,64 +122,72 @@ Time_alg
 	movf	PRODH, W	    ; High byte adds to TimeDesH 
 	addwfc	TimeDesH
 	movf	tens, W		    ; 16x8 bit calculation: takes tens and
-	mullw	0x58		    ; multiplies by low byte of .600
+	mullw	0x58		    ; multiplies by low byte of 600
 	movf	PRODL, W
 	addwf	TimeDesL	    ; Low byte of this adds to TimeDesL
 	movf	PRODH, W
 	addwfc	TimeDesH	    ; High byte of this adds to TimeDesH
 	movf	tens, W
-	mullw	0x02		    ; Multiplies tens by high byte of .600
+	mullw	0x02		    ; Multiplies tens by high byte of 600
 	movf	PRODL, W
 	addwfc	TimeDesH	    ; Puts low byte of that into TimeDesH
         return
 	
-Power_Alg			    ; input temp is in hundreds, tens, units
-				    ; current temp is in TempCT, TempCU, TempCD
+	; Power_Alg:
+	; Converts the difference between the desired temperature and the
+	; current temperature into a time required to reach the desired
+	;			    - requires 3 button presses from keypad 
+	;			    for desired temperature and LM35 readout
+	;			    - sets TimeDesL and TimeDesH
+Power_Alg
 	clrf	TimeDesL
 	clrf	TimeDesH
-	movlw	0xf6
-	movwf	PASub
+	movlw	0xf6		
+	movwf	PASub		    ; PASub is used in a carry correction (=246)
 	movlw	0x09
-	movwf	PACheck
+	movwf	PACheck		    ; PACheck is used to check for a carry (=9)
 	movf	TempCD, W	    
 	movff	decimals, Temporary
-	subwf	Temporary, f	    ; subtract the decimal temp contributions
-	movff	Temporary, Tdec	    ; ...to get temp difference (decimal)
+	subwf	Temporary, f	    ; Find the difference in decimals
+	movff	Temporary, Tdec	    
 	movf	TempCU, W
 	movff	units, Temporary 
-	subwfb	Temporary, f	    ; sub with borrow the units temp contri.
-	movff	Temporary, Tunit    ; ...to get temp difference (units)
+	subwfb	Temporary, f	    ; Find the difference in units
+	movff	Temporary, Tunit    
 	movf	TempCT, W
 	movff	tens, Temporary
-	subwfb	Temporary, f	    ; sub with borrow the tens temp contrib...
-	movff	Temporary, Tten	    ; ...to get temp difference (tens)
+	subwfb	Temporary, f	    ; Find the difference in tens
+	movff	Temporary, Tten	    
 	movf	PACheck, W
-	cpfsgt	Tdec
-	bra	NextCheck
-	call	CorrectionDec
+	cpfsgt	Tdec		    ; Check if a borrow was needed for decimals
+	bra	NextCheck	    ; If not, continue on to check units next
+	call	CorrectionDec	    ; Else, correct this before checking units
 NextCheck
-	movf	PACheck, W
-	cpfsgt	Tunit
-	bra	Conversion
-	call	CorrectionUnit
+	movf	PACheck, W	
+	cpfsgt	Tunit		    ; Check if a borrow was needed for units
+	bra	Conversion	    ; If not, start the conversion to a run time
+	call	CorrectionUnit	    ; Else, correct this before conversion
 Conversion
 	movf	Tten, W
-	mullw	0x0A		    ; multiply the tens column by 10...
+	mullw	0x0A		    ; Multiply the tens column by 10...
 	movf	PRODL, W
 	addwf	Tunit, f	    ; ...and add this to the units...
-	movf	Tunit, W	    ; ...to get integer temp difference
-	mullw	0x28		    ; multiply by .40 to get a time difference
-	movff	PRODL, TimeDesL
+	movf	Tunit, W	    ; ...to get integer temperature difference
+	mullw	0x28		    ; 40 is the heat capacity / power (in s/K)
+	movff	PRODL, TimeDesL	    ; 40 * temperature difference = run time 
 	movff	PRODH, TimeDesH
-	movf	Tdec, W		    ; now we deal with the decimal temp difference
-	mullw	0x04		    ; multiply by 4...
-	movf	PRODL, W	    ; ...to get the additional time difference
-	addwf	TimeDesL, f	    ; add this contribution in 
+	movf	Tdec, W		    ; This is the decimal time difference
+	mullw	0x04		    ; 40/10 is used to negate the decimal point
+	movf	PRODL, W	    ; 
+	addwf	TimeDesL, f	    ; Add this contribution to the integer one 
 	movlw	0x0
-	addwfc	TimeDesH, f	    ; add a carry if needed from the decimal contrib.\A      
+	addwfc	TimeDesH, f      
 	return	
 	
-CorrectionDec
+	; CorrectionDec:
+	; Corrects the decimal temperature difference if a borrow was needed by
+	; taking the temperature difference away from 246 
+CorrectionDec		   
 	movf	Tdec, W
 	movwf	Temporary
 	movf	PASub, W
@@ -184,6 +195,9 @@ CorrectionDec
 	movff	Temporary, Tdec
 	return
 
+	; CorrectionUnit:
+	; Corrects the unit temperature difference if a borrow was needed by
+	; taking the temperature difference away from 246 
 CorrectionUnit
 	movf	Tunit, W
 	movwf	Temporary
@@ -192,38 +206,47 @@ CorrectionUnit
 	movff	Temporary, Tunit
 	return
 	
+	; PowerCheck:
+	; Checks if the desired temperature is less than the current temperature
+	; If it is, the system will revert to Method A of heating 
+	; If not, the system will continue with this Method B
+	;			    - requires 3 button presses on the keypad
+	;			    to set desired temperature and LM35 readout
 PowerCheck	    
 	movf	tens, W
-	cpfsgt	TempCT		    ;compare high bytes (current/desired)?
-	bra	CheckStep1
-	bra	HeaterOff
+	cpfsgt	TempCT		    ; Compare current and desired tens columns
+	bra	CheckStep1	    ; If current =< desired, continue checking
+	bra	HeaterOff	    ;  If current > desired, switch heater off
 	
-CheckStep1	    ;are the high bytes equal (current/desired)?
-	cpfseq	TempCT
-	return 
-	
-CheckStep2	    ;compare low bytes (current/desired)?
+CheckStep1	    
+	cpfseq	TempCT		    ; Are tens columns of current/desired equal?
+	return			    ; If not, power routine can run
+				    ; If they are equal, continue checking
+CheckStep2	    
 	movf	units, W
-	cpfsgt	TempCU
-	bra	CheckStep3
-	bra	HeaterOff
+	cpfsgt	TempCU		    ; Compare current and desired units column
+	bra	CheckStep3	    ; If current =< desired, continue checking
+	bra	HeaterOff	    ; If current > desired, switch heater off
 	
-CheckStep3	    ;are the low bytes equal (current/desired)?
-	cpfseq	TempCU
-	return
-
+CheckStep3	    
+	cpfseq	TempCU		    ; Are units column of current/desired equal?
+	return			    ; If not, power routine can run
+				    ; If they are equal, continue checking
 CheckStep4  
 	movf	decimals, W
-	cpfsgt	TempCD
-	bra	CheckStep5
-	bra	HeaterOff
+	cpfsgt	TempCD		    ; Compare current and desired decimals column
+	bra	CheckStep5	    ; If current =< desired, continue checking
+	bra	HeaterOff	    ; If current > desired, switch heater off
 
 CheckStep5  
-	cpfseq	TempCD
-	return
-	bra	HeaterOff
+	cpfseq	TempCD		    ; Are decimals column of current/desired equal?
+	return			    ; If not, power routine can run
+	bra	HeaterOff	    ; If they are equal, switch heater off
 	return 
-	
+	    
+	; HeaterOff:
+	; Switches heater off and places the system into Method A, where it will
+	; only heat if the current temperature drops below the desired
 HeaterOff
 	clrf	TRISJ
 	movlw	0x00
