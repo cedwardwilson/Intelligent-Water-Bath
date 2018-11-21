@@ -14,63 +14,63 @@
 	
 	; Named variables in access ram
 acs0	    udata_acs		    
-counter	    res 1		    ; reserve one byte for a counter variable
-delay_count res 1		    ; reserve one byte for counter in the delay routine
-offset	    res 1		    ; reserve one byte for the offset in the V-T conversion
-T_CrntL	    res 1
-T_CrntH	    res 1		    ; reserved for the current voltage readout off the LM35
-TimerCount  res 1		    ; number of seconds passed between data readouts
-DataCount   res 1		    ; number of seconds between data readouts
+counter	    res 1		    ; Counter 
+delay_count res 1		    ; For counter in the delay routine
+offset	    res 1		    ; Offset in the Voltage-Temp conversion
+T_CrntL	    res 1		    ; Voltage readout off the LM35
+T_CrntH	    res 1		    
+TimerCount  res 1		    ; Seconds passed between data readouts
+DataCount   res 1		    ; Desired seconds between data readouts
 TimeL	    res 1		    ; 2 bytes for the 'real time'
 TimeH	    res 1
-Aascii	    res 1		    ; for routine select (A, B or C)
+Aascii	    res 1		    ; For routine select (A, B or C)
 Bascii	    res 1
 Cascii	    res 1
-Ascii	    res 1		    ; holds the ascii in routine select
-PowerResL   res 1		    ; for holding power vals whilst warming up
-PowerResH   res 1
+Ascii	    res 1		    
+PowerResL   res 1		    ; Holds desired temperature whilst warming 
+PowerResH   res 1		    ; up in power routine
 PowerResU   res 1
 
-tables	    udata	0x400	    ; reserve data anywhere in RAM (here at 0x400)
-myArray	    res		0x80	    ; reserve 128 bytes for message data
+tables	    udata	0x400	    ; Reserve data anywhere in RAM (here at 0x400)
+myArray	    res		0x80	    ; Reserve 128 bytes for message data
 
-rst	code	0		    ; reset vector
+rst	code	0		    ; Reset vector
 	goto	setup
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
-setup	bcf	EECON1, CFGS	    ; point to Flash program memory  
-	bsf	EECON1, EEPGD	    ; access Flash program memory
-	call	UART_Setup	    ; setup UART
-	call	LCD_Setup	    ; setup LCD
-	call	ADC_Setup	    ; setup ADC
+setup	bcf	EECON1, CFGS	    ; Point to Flash program memory  
+	bsf	EECON1, EEPGD	    ; Access Flash program memory
+	call	UART_Setup	    ; Setup UART
+	call	LCD_Setup	    ; Setup LCD
+	call	ADC_Setup	    ; Setup ADC
 	; ***sets up our 3 look up tables***
-	call	LookUp_d_h	    ; using FSR0			
-	call	Keys_Translator	    ; using FSR1
-	call	M_Table		    ; using FSR2
-	clrf	TimerCount	    ; reset the timers
+	call	LookUp_d_h	    ; Using FSR0			
+	call	Keys_Translator	    ; Using FSR1
+	call	M_Table		    ; Using FSR2
+	clrf	TimerCount	    ; Reset the timers
 	clrf	DataCount
 	clrf	TimeL
 	clrf	TimeH
-	movlw	0x41
+	movlw	0x41		    ; Ascii code - A
 	movwf	Aascii
-	movlw	0x42
+	movlw	0x42		    ; Ascii code - B
 	movwf	Bascii
-	movlw	0x43
+	movlw	0x43		    ; Ascii code - C
 	movwf	Cascii
 	goto	start
 	
 	; ******* Main programme ****************************************
-start 	movlw	0x0A		    ; define time in sec between data readings
+start 	movlw	0x0A		    ; Define time between data readings
 	movwf	DataCount
-	movlw	0x0D		    ; callibrates between mV and T readings
+	movlw	0x0D		    ; Callibrates between mV and T readings
 	movwf	offset
-	clrf	PORTJ, ACCESS	    ;cleared for use later with powering heater
-	movlw	0x0A		    ; for comparison loops later (in T_in_d_h)
+	clrf	PORTJ, ACCESS	    ; Clears J, ensures heater off
+	movlw	0x0A		    ; For comparison loops later (in T_in_d_h)
 	movwf	tens
 	movwf	units
 	movwf	decimals
-	call	T_in_d_h	    ; converts Temp in decimal to hex voltage
+	call	T_in_d_h	    ; Converts input values in decimal to hex 
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -78,25 +78,30 @@ start 	movlw	0x0A		    ; define time in sec between data readings
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	SecondTimer	    ; sets up timer/interrupts for data readings
 	bra	RoutineSelect
 	
+	; RoutineSelect:
+	; Determines which routine will run based on user input (A, B or C)
+	;			    - requires button press (A, B or C)
 RoutineSelect
-	call	Keypad		    ; puts ascii value for A, B or C onto W
+	call	Keypad		    ; Puts ascii value for A, B or C onto W
 	movwf	Ascii
-	call	LCD_Send_Byte_D
+	call	LCD_Send_Byte_D	    ; Sends A, B or C to LCD
+	call	SecondTimer	    ; Sets up timer/interrupts for data readings
 	movf	Ascii, W
-	cpfseq	Aascii		    ; routine A select?
-	bra	Continue
-	bra	TempLoop
+	cpfseq	Aascii		    ; Has routine A been selected?
+	bra	Continue	    ; If not, check if B or C has been selected
+	bra	TempLoop	    ; Else, run routine A (TempLoop)
 Continue  
-   	cpfseq	Bascii		    ; routine B or C select? 
-	bra	TimeLoop
-	bra	Power
+   	cpfseq	Bascii		    ; Has routine B been selected? 
+	bra	TimeLoop	    ; If not, run routine C (TimeLoop)
+	bra	Power		    ; Else, run routine C (Power)
 	
-TempLoop			    ; Routine A: input temp vs current temp
-	call	TempIn_Alg
-	call	ADC_Read	    ; get out a hex value for voltage
+	; TempLoop:
+	; This is routine A - heater on until desired temperature is met
+TempLoop			    
+	call	TempIn_Alg	    ; Turns user input into a temperature
+	call	ADC_Read	    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -104,11 +109,14 @@ TempLoop			    ; Routine A: input temp vs current temp
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	LCD_Alg		    ; converts hex to decimal and output to LCD
-	call	FDLP_Temp	    ; determines in heater should be on/off
-	goto	TempLoop	    ; holds the system in this loop
-		
-Power				    ; Routine B: power calculation controls heat
+	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	FDLP_Temp	    ; Determines in heater should be on/off
+	goto	TempLoop	    ; Holds the system in this loop
+	
+	; Power:
+	; This is routine B - heater on for a calculated amount of time, such 
+	; that the desired temperature is reached when system = equilibrium
+Power				    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -116,30 +124,29 @@ Power				    ; Routine B: power calculation controls heat
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	LCD_Alg
-	call	PowerCheck
-	movff	decimals, PowerResL    ; save power vals (Tdesired) whilst warming up
+	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	PowerCheck	    ; Checks if Tdes > Tcurrent before heating
+	movff	decimals, PowerResL ; Save desired temperature whilst warming up
 	movff	units, PowerResH
 	movff	tens, PowerResU
-	movlw	0x09
+	movlw	0x09		    ; Sets up 5.9 minutes warm up time 
 	movwf	decimals
-	movlw	0x05		    ; 5.9 minutes warm up time - is actually 370s (including x1.04 correction)
+	movlw	0x05		    
 	movwf	units
 	clrf	tens
-	call	WarmUpTime
-	clrf	TimeL
+	call	WarmUpTime	    ; Heater on for the given warm up time
+	clrf	TimeL		    ; After warm up, clear the timer
 	clrf	TimeH
-	movff	PowerResL, decimals
+	movff	PowerResL, decimals ; Reset desired temperature, for power loop
 	movff	PowerResH, units
 	movff	PowerResU, tens 
-	call	Power_Alg	    ; after this, TimeDesL/H store the time to run for
-	movlw	0x2C		    ; this is an offset for the levelling off time
-	subwf	TimeDesL, f	    ; of 240s (*1.04 therefore actually 250s)
+	call	Power_Alg	    ; Finds the required time for heater on 
+	movlw	0x2C		    ; Accounts for the levelling off time
+	subwf	TimeDesL, f	    ; of 240s (= 0x012C)
 	movlw	0x01
 	subwfb	TimeDesH, f
-PowerLoop			    ; we only want to set the desired time once
-				    ; so we only loop to PowerLoop, not the top
-	call	ADC_Read	    ; of the Power routine
+PowerLoop			    ; System sits in this loop for required time 
+	call	ADC_Read	    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -147,13 +154,15 @@ PowerLoop			    ; we only want to set the desired time once
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	LCD_Alg
-	call	FDLP_Time
-	goto	PowerLoop
+	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	FDLP_Time	    ; Determines if heater should be on/off
+	goto	PowerLoop	    ; Holds the system in this loop
 	
-TimeLoop			    ; Routine C: input time vs current time
-	call	Time_alg
-	call	ADC_Read	    ; get out a hex value for voltage
+	; TimeLoop:
+	; This is routine C - heater on until desired time has passed
+TimeLoop			    
+	call	Time_alg	    ; Turns user input into a time
+	call	ADC_Read	    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -161,13 +170,16 @@ TimeLoop			    ; Routine C: input time vs current time
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	LCD_Alg		    ; converts hex to decimal and output to LCD
-	call	FDLP_Time
-	goto	TimeLoop
+	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	FDLP_Time	    ; Determines if heater should be on/off
+	goto	TimeLoop	    ; Holds the system in this loop
 	
+	; WarmUpTime:
+	; Keeps the heater on for a set time, at the start of routine B
+	; Follows a similar format to routine C
 WarmUpTime
-	call	Time_alg
-	call	ADC_Read	    ; get out a hex value for voltage
+	call	Time_alg	    
+	call	ADC_Read	    
 	movlw	.250
 	call	LCD_delay_ms
 	movlw	.250
@@ -175,16 +187,17 @@ WarmUpTime
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
-	call	LCD_Alg		    ; converts hex to decimal and output to LCD
-	call	FDLP_Time
-	clrf	0x00		    ; this condition may not be working????
-	movf	PORTJ, W
+	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	FDLP_Time	    ; Determines if heater should be on/off
+	clrf	0x00		    ; Condition to check if warm up time is 
+	movf	PORTJ, W	    ; complete by checking if heater is on/off
 	cpfseq	0x00
-	goto	WarmUpTime
-	return
+	goto	WarmUpTime	    ; Holds the system in this loop
+	return			    ; Returns back to routine B once complete
 	
-	; a delay subroutine if you need one, times around loop in delay_count
-delay	decfsz	delay_count	; decrement until zero
+	; delay:
+	; A delay subroutine 
+delay	decfsz	delay_count	    ; Decrement until zero
 	bra delay
 	return
 
