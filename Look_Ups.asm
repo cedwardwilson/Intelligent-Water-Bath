@@ -64,7 +64,7 @@ LookUp_d_h
 	; Stores ascii code for  0 - 9, A - D, * and # at the equivalent binary 
 	; file address as corresponds to a button press on the keypad
 	; Uses FSR1 and Bank 4
- Keys_Translator		
+Keys_Translator		
 	movlb	4			
 	lfsr	FSR1, 0x480		; Start at 0x480 address in Bank 4
 	movlw	'1'			
