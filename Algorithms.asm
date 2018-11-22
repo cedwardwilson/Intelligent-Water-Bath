@@ -35,6 +35,16 @@ Algorithms  code
 	;			    - Requires LM35 connection, offset
 	;			    - Sets TempCD, TempCU, TempCT 
 LCD_Alg				   
+	movlw	0x54		    ; Outputs 'Temp:' onto the LCD
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x6D
+	call	LCD_Send_Byte_D
+	movlw	0x70
+	call	LCD_Send_Byte_D
+	movlw	0x3A
+	call	LCD_Send_Byte_D
 	movf	ADRESL, W	    ; Stores mV reading (low byte) from LM35
 	movwf	temp
 	movwf	T_CrntL		    
