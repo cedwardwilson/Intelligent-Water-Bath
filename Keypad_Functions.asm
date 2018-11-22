@@ -7,6 +7,7 @@
 	    ; External and global routines/variables
 	    extern	delay, LCD_delay_ms, LCD_Send_Byte_D, TempIn_Alg, LCD_Alg
 	    global	Keypad, tmpval, T_in_d_h, tens, units, decimals
+	    global	tenLCD, unitLCD, decLCD
     
 	    ; Named variables in access ram
 acs0	    udata_acs			
