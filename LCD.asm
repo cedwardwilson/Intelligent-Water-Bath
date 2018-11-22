@@ -5,6 +5,8 @@
 	; External and global routines/variables
 	global  LCD_Setup, LCD_Write_Message, LCD_Clear, LCD_Move, LCD_delay
 	global  LCD_Send_Byte_D, LCD_delay_ms, LCD_Write_Hex, LCD_Send_Nib
+	global	LCD_User1, LCD_User2, LCD_User3
+	extern	tenLCD, unitLCD, decLCD
 
 	; Named variables in access ram
 acs0    udata_acs		    
@@ -171,8 +173,88 @@ LCD_Move	    ; Moves LCD cursor to 2nd line
 	movlw	.2		    ; wait 2ms
 	call	LCD_delay_ms
 	return
-
-
-    end
+	
+	; LCD_User1:
+	; Outputs 'Time/Temp?' to the LCD			    
+LCD_User1
+	movlw	0x54
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x6D
+	call	LCD_Send_Byte_D
+	movlw	0x70
+	call	LCD_Send_Byte_D
+	movlw	0x2F
+	call	LCD_Send_Byte_D
+	movlw	0x54
+	call	LCD_Send_Byte_D 
+	movlw	0x69
+	call	LCD_Send_Byte_D
+	movlw	0x6D
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x3F
+	call	LCD_Send_Byte_D
+	movlw	0x20
+	call	LCD_Send_Byte_D
+	return 
+	
+	; LCD_User2:
+	; Outputs 'Method' to the LCD
+LCD_User2
+	movlw	0x4D
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x74
+	call	LCD_Send_Byte_D
+	movlw	0x68
+	call	LCD_Send_Byte_D
+	movlw	0x6F
+	call	LCD_Send_Byte_D
+	movlw	0x64
+	call	LCD_Send_Byte_D
+	movlw	0x3F
+	call	LCD_Send_Byte_D
+	movlw	0x20
+	call	LCD_Send_Byte_D
+	return 
+    
+	; LCD_User3:
+	; Outputs 'Desired:' and the desired temperature to the LCD
+LCD_User3
+	call	LCD_Move
+	movlw	0x44
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x73
+	call	LCD_Send_Byte_D
+	movlw	0x69
+	call	LCD_Send_Byte_D
+	movlw	0x72
+	call	LCD_Send_Byte_D
+	movlw	0x65
+	call	LCD_Send_Byte_D
+	movlw	0x64
+	call	LCD_Send_Byte_D
+	movlw	0x3A
+	call	LCD_Send_Byte_D
+	movlw	0x30
+	call	LCD_Send_Byte_D
+	movf	tenLCD, W
+	call	LCD_Send_Byte_D
+	movf	unitLCD, W
+	call	LCD_Send_Byte_D
+	movlw	0x2E
+	call	LCD_Send_Byte_D
+	movf	decLCD, W
+	call	LCD_Send_Byte_D
+	return
+	
+	
+	end
 
 
