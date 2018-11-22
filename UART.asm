@@ -23,7 +23,7 @@ UART_Setup
     bsf	    TRISC, TX1		; TX1 pin as output
     return
     
-UART_Transmit_Message		; Message stored at FSR2???, length stored in W
+UART_Transmit_Message		; Message stored at FSR2, length stored in W
     movwf   UART_counter
 UART_Loop_message
     movf    POSTINC2, W
