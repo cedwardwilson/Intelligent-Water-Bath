@@ -27,7 +27,7 @@ DataLow	    res 1			; To send the lowest digit to UART
     ;					- sets DataTop, DataHigh, DataUp,
     ;					DataLow
 int_hi	code	    0x0008		
-	btfss	    INTCON,TMR0IF	; Check that this is timer0 interrup
+	btfss	    INTCON,TMR0IF	; Check that this is timer0 interrupt
 	retfie	    FAST		; If not, return
 	incf	    TimeL		; Increment TimeL (every 1.04s)
 	movlw	    0x0
