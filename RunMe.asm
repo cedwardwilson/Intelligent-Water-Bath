@@ -7,6 +7,7 @@
 	extern  LCD_Setup, ADC_Setup, UART_Setup, SecondTimer
 	extern	FDLP_Time, FDLP_Temp, Time_alg, Power_Alg, TempIn_Alg, LCD_Alg
 	extern  ADC_Read, LCD_Clear, LCD_Send_Byte_D, LCD_delay_ms, PowerCheck
+	extern	LCD_User1, LCD_User2, LCD_User3
 	extern	Keys_Translator, LookUp_d_h, M_Table, Keypad, T_in_d_h
 	extern	tens, units, decimals, TimeDesL, TimeDesH
 	global	T_CrntL, T_CrntH, offset, TimerCount, DataCount, TimeL, TimeH
@@ -70,6 +71,7 @@ start 	movlw	0x0A		    ; Define time between data readings
 	movwf	tens
 	movwf	units
 	movwf	decimals
+	call	LCD_User1
 	call	T_in_d_h	    ; Converts input values in decimal to hex 
 	movlw	.250
 	call	LCD_delay_ms
@@ -78,6 +80,7 @@ start 	movlw	0x0A		    ; Define time between data readings
 	movlw	.250
 	call	LCD_delay_ms
 	call	LCD_Clear
+	call	LCD_User2
 	bra	RoutineSelect
 	
 	; RoutineSelect:
@@ -110,6 +113,7 @@ TempLoop
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	LCD_User3
 	call	FDLP_Temp	    ; Determines in heater should be on/off
 	goto	TempLoop	    ; Holds the system in this loop
 	
@@ -155,6 +159,7 @@ PowerLoop			    ; System sits in this loop for required time
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	LCD_User3	    ; Outputs desired temperature to LCD
 	call	FDLP_Time	    ; Determines if heater should be on/off
 	goto	PowerLoop	    ; Holds the system in this loop
 	
@@ -188,6 +193,7 @@ WarmUpTime
 	call	LCD_delay_ms
 	call	LCD_Clear
 	call	LCD_Alg		    ; Outputs current temperature to LCD
+	call	LCD_User3	    ; Outputs the desired temperature to LCD
 	call	FDLP_Time	    ; Determines if heater should be on/off
 	clrf	0x00		    ; Condition to check if warm up time is 
 	movf	PORTJ, W	    ; complete by checking if heater is on/off
